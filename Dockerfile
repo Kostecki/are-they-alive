@@ -18,6 +18,8 @@ COPY public/ ./public
 COPY vite.config.ts tsconfig.json postcss.config.cjs ./
 COPY package.json pnpm-lock.yaml ./
 
+RUN mkdir -p dist
+
 RUN pnpm run build
 
 # Prune dev deps to production-only
