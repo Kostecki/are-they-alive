@@ -16,6 +16,16 @@ import "@mantine/core/styles.css";
 
 import { seo } from "~/utils/seo";
 
+const SRC_URL = import.meta.env.VITE_UMAMI_SRC_URL;
+const WEBSITE_ID = import.meta.env.VITE_UMAMI_WEBSITE_ID;
+
+const UmamiScript = () => {
+	const isProd = import.meta.env.PROD;
+	if (!isProd || !SRC_URL || !WEBSITE_ID) return null;
+
+	return <script defer src={SRC_URL} data-website-id={WEBSITE_ID} />;
+};
+
 export const Route = createRootRoute({
 	head: () => ({
 		meta: [
@@ -66,6 +76,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 			<head>
 				<HeadContent />
 				<ColorSchemeScript />
+				<UmamiScript />
 			</head>
 			<body>
 				<MantineProvider defaultColorScheme="dark">
