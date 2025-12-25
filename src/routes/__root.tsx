@@ -21,7 +21,6 @@ const SRC_URL = import.meta.env.VITE_UMAMI_SRC_URL;
 const WEBSITE_ID = import.meta.env.VITE_UMAMI_WEBSITE_ID;
 
 const UmamiScript = () => {
-	if (typeof window === "undefined") return null;
 	if (!IS_PROD || !SRC_URL || !WEBSITE_ID) return null;
 
 	return <script defer src={SRC_URL} data-website-id={WEBSITE_ID} />;
