@@ -15,6 +15,7 @@ import {
 	useCombobox,
 } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
+import ky from "ky";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MultiSearchResult, Search } from "tmdb-ts/dist/types/search";
 
@@ -87,20 +88,16 @@ export default function SearchForm({ ...props }: InputProps) {
 
 			setLoadingCast(true);
 			try {
-				const res = await fetch("/api/credits", {
-					method: "POST",
-					headers: { "Content-Type": "application/json" },
-					body: JSON.stringify({
-						id: selectedItem.id,
-						type: selectedItem.mediaType,
-						offset: reset ? 0 : (offset ?? 0),
-						limit: 14,
-					}),
-				});
-
-				if (!res.ok) throw new Error("Failed to fetch credits");
-
-				const data = (await res.json()) as {
+				const data = (await ky
+					.post("/api/credits", {
+						json: {
+							id: selectedItem.id,
+							type: selectedItem.mediaType,
+							offset: reset ? 0 : (offset ?? 0),
+							limit: 14,
+						},
+					})
+					.json()) as {
 					id: number;
 					type: "movie" | "tv";
 					cast: NormalizedCast[];
@@ -157,7 +154,10 @@ export default function SearchForm({ ...props }: InputProps) {
 		async function search() {
 			setLoading(true);
 
-			const res = await fetch(`/api/search?q=${debounced}`);
+			const res = await ky.get(
+				`/api/search?q=${encodeURIComponent(debounced)}`,
+			);
+
 			const data = (await res.json()) as Search<MultiSearchResult>;
 
 			if (aborted) {
