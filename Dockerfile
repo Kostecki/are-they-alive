@@ -35,7 +35,7 @@ WORKDIR /are-they-alive
 
 # Copy runtime artifacts
 COPY --from=prod-deps /are-they-alive/node_modules ./node_modules
-COPY --from=build /are-they-alive/build ./build
+COPY --from=build /are-they-alive/dist ./dist
 COPY --from=build /are-they-alive/public ./public
 COPY package.json pnpm-lock.yaml ./
 
