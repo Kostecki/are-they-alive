@@ -1,6 +1,5 @@
 import { Anchor, Box, type BoxProps, Grid, Image, Text } from "@mantine/core";
-
-import type { Result } from "./SearchForm";
+import type { Result } from "types";
 
 type InputProps = {
 	item: Result;

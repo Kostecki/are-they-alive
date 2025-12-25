@@ -1,7 +1,7 @@
 import { Grid, Text, Title } from "@mantine/core";
 import { createFileRoute } from "@tanstack/react-router";
 
-import SearchForm from "~/components/SearchForm";
+import SearchForm from "~/components/Search";
 
 export const Route = createFileRoute("/")({
 	component: Home,

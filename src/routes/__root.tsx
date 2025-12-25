@@ -10,9 +10,11 @@ import { createRootRoute, HeadContent, Scripts } from "@tanstack/react-router";
 import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import type * as React from "react";
 
-import { DefaultCatchBoundary } from "~/components/DefaultCatchBoundary";
-import { NotFound } from "~/components/NotFound";
+import { DefaultCatchBoundary } from "~/components/Errors/DefaultCatchBoundary";
+import { NotFound } from "~/components/Errors/NotFound";
 import "@mantine/core/styles.css";
+
+import { emotionTransform, MantineEmotionProvider } from "@mantine/emotion";
 
 import { seo } from "~/utils/seo";
 
@@ -79,10 +81,15 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<UmamiScript />
 			</head>
 			<body>
-				<MantineProvider defaultColorScheme="dark">
-					<Container strategy="block" mih="100vh">
-						{children}
-					</Container>
+				<MantineProvider
+					stylesTransform={emotionTransform}
+					defaultColorScheme="dark"
+				>
+					<MantineEmotionProvider>
+						<Container strategy="block" mih="100vh">
+							{children}
+						</Container>
+					</MantineEmotionProvider>
 				</MantineProvider>
 				<TanStackRouterDevtools position="bottom-right" />
 				<Scripts />

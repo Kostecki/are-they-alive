@@ -6,17 +6,7 @@ import {
   type Credits,
   TMDB,
 } from "tmdb-ts";
-
-export type NormalizedCast = {
-  id: number;
-  name: string;
-  original_name: string;
-  gender: number;
-  profile_path: string | null;
-  characters: string[];
-  birthday: string | null;
-  deathday: string | null;
-};
+import type { NormalizedCast } from "types";
 
 const tmdb = new TMDB(process.env.TMDB_API_KEY || "");
 
