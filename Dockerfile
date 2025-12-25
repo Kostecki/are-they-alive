@@ -18,8 +18,13 @@ COPY public/ ./public
 COPY vite.config.ts tsconfig.json postcss.config.cjs ./
 COPY package.json pnpm-lock.yaml ./
 
-RUN mkdir -p dist
+ARG VITE_UMAMI_SRC_URL
+ARG VITE_UMAMI_WEBSITE_ID
 
+ENV VITE_UMAMI_SRC_URL=$VITE_UMAMI_SRC_URL
+ENV VITE_UMAMI_WEBSITE_ID=$VITE_UMAMI_WEBSITE_ID
+
+RUN mkdir -p dist
 RUN pnpm run build
 
 # Prune dev deps to production-only

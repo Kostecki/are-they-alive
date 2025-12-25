@@ -52,3 +52,6 @@ jobs:
           cache-to: type=gha,mode=max
           provenance: false
           sbom: false
+          build-args: |
+            VITE_UMAMI_SRC_URL=${{ vars.VITE_UMAMI_SRC_URL }}
+            VITE_UMAMI_WEBSITE_ID=${{ vars.VITE_UMAMI_WEBSITE_ID }}
