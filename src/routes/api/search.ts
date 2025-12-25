@@ -1,0 +1,30 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { TMDB } from "tmdb-ts";
+
+const tmdb = new TMDB(process.env.TMDB_API_KEY || "");
+
+export const Route = createFileRoute("/api/search")({
+  server: {
+    handlers: {
+      GET: async ({ request }) => {
+        const url = new URL(request.url);
+        const query = url.searchParams.get("q");
+
+        if (!query || query.trim() === "" || query.length < 2) {
+          return Response.json({ results: [] });
+        }
+
+        try {
+          const data = await tmdb.search.multi({ query });
+          return Response.json(data);
+        } catch (error) {
+          console.error("TMDB Search Error:", error);
+
+          return new Response("Failed to fetch search results", {
+            status: 500,
+          });
+        }
+      },
+    },
+  },
+});
