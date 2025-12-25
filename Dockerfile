@@ -1,7 +1,7 @@
 # Base for dev/build
 FROM node:24-slim AS base
 RUN npm install -g pnpm
-WORKDIR /hop-rank
+WORKDIR /are-they-alive
 
 # Install all (dev) deps
 FROM base AS deps
@@ -11,9 +11,9 @@ COPY package.json pnpm-lock.yaml ./
 RUN --mount=type=cache,target=/root/.pnpm-store \
   pnpm install --frozen-lockfile
 
-# Build the app (frontend + backend) with env injection
+# Build the app (frontend + backend)
 FROM deps AS build
-COPY app/ ./app
+COPY src/ ./src
 COPY public/ ./public
 COPY vite.config.ts tsconfig.json postcss.config.cjs ./
 COPY package.json pnpm-lock.yaml ./
