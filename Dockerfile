@@ -1,5 +1,5 @@
 # Base for dev/build
-FROM node:24-slim AS base
+FROM node:25-slim AS base
 RUN npm install -g pnpm
 WORKDIR /are-they-alive
 
@@ -33,7 +33,7 @@ FROM deps AS prod-deps
 RUN pnpm prune --prod
 
 # Final runtime image
-FROM node:24-slim AS runner
+FROM node:25-slim AS runner
 RUN apt-get update \
   && apt-get install -y --no-install-recommends tzdata tini ca-certificates \
   && rm -rf /var/lib/apt/lists/*
