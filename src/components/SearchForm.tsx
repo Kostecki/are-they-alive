@@ -3,7 +3,8 @@ import { useDebouncedValue } from "@mantine/hooks";
 import ky from "ky";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MultiSearchResult, Search } from "tmdb-ts/dist/types/search";
-import type { NormalizedCast, Result } from "types";
+
+import type { NormalizedCast, Result } from "~/types";
 
 import CastList from "./CastList";
 import { GroupSortHeader } from "./GroupSortHeader";

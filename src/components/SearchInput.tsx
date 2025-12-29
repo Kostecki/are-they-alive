@@ -1,5 +1,6 @@
 import { Combobox, Loader, TextInput, useCombobox } from "@mantine/core";
-import type { Result } from "types";
+
+import type { Result } from "~/types";
 
 type InputProps = {
 	value: string;

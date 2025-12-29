@@ -9,7 +9,8 @@ import {
 	SimpleGrid,
 	Text,
 } from "@mantine/core";
-import type { NormalizedCast } from "types";
+
+import type { NormalizedCast } from "~/types";
 
 type InputProps = {
 	castSections: { title: string; members: NormalizedCast[] }[];

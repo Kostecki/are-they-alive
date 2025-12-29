@@ -6,7 +6,8 @@ import {
   type Credits,
   TMDB,
 } from "tmdb-ts";
-import type { NormalizedCast } from "types";
+
+import type { NormalizedCast } from "~/types";
 
 import redis from "~/utils/redis";
 

@@ -14,8 +14,8 @@ RUN --mount=type=cache,target=/root/.pnpm-store \
 # Build the app (frontend + backend)
 FROM deps AS build
 COPY src/ ./src
+COPY src/types.ts ./src/types.ts
 COPY public/ ./public
-COPY types/ ./types
 COPY vite.config.ts tsconfig.json postcss.config.cjs ./
 COPY package.json pnpm-lock.yaml ./
 
