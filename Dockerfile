@@ -15,6 +15,7 @@ RUN --mount=type=cache,target=/root/.pnpm-store \
 FROM deps AS build
 COPY src/ ./src
 COPY public/ ./public
+COPY types/ ./types
 COPY vite.config.ts tsconfig.json postcss.config.cjs ./
 COPY package.json pnpm-lock.yaml ./
 
