@@ -68,6 +68,16 @@ async function chunkedFetch<T, R>(
   return results;
 }
 
+function getCharacters(member: Cast | AggregateCast) {
+  if ("character" in member) {
+    return member.character ? [member.character] : [];
+  } else if ("roles" in member) {
+    return member.roles.map((r) => r.character);
+  }
+
+  return [];
+}
+
 export const Route = createFileRoute("/api/credits")({
   server: {
     handlers: {
@@ -104,8 +114,40 @@ export const Route = createFileRoute("/api/credits")({
           const total = actingCast.length;
           const paginatedCast = actingCast.slice(offset, offset + limit);
 
-          const detailedCast: NormalizedCast[] = await chunkedFetch(
-            paginatedCast,
+          // Fetch detailed info with caching
+          const detailedCast: NormalizedCast[] = [];
+          const toFetch: (Cast | AggregateCast)[] = [];
+
+          // First, try to get from cache
+          for (const member of paginatedCast) {
+            const cacheKey = `person:${member.id}`;
+            const cachedPerson = await redis.get(cacheKey);
+
+            if (cachedPerson) {
+              try {
+                const person = JSON.parse(cachedPerson);
+                detailedCast.push({
+                  id: member.id,
+                  name: member.name,
+                  original_name: member.original_name,
+                  gender: member.gender,
+                  profile_path: member.profile_path ?? null,
+                  characters: getCharacters(member),
+                  order: member.order,
+                  birthday: person?.birthday ?? null,
+                  deathday: person?.deathday ?? null,
+                });
+              } catch {
+                toFetch.push(member);
+              }
+            } else {
+              toFetch.push(member);
+            }
+          }
+
+          // Fetch remaining from TMDB
+          const fetched: NormalizedCast[] = await chunkedFetch(
+            toFetch,
             async (member) => {
               const person = await getPersonDetailsCached(member.id);
 
@@ -115,20 +157,16 @@ export const Route = createFileRoute("/api/credits")({
                 original_name: member.original_name,
                 gender: member.gender,
                 profile_path: member.profile_path ?? null,
-                characters:
-                  "character" in member
-                    ? member.character
-                      ? [member.character]
-                      : []
-                    : "roles" in member
-                      ? member.roles.map((r) => r.character)
-                      : [],
+                characters: getCharacters(member),
                 order: member.order,
                 birthday: person?.birthday ?? null,
                 deathday: person?.deathday ?? null,
               };
             }
           );
+
+          // Combine cached and fetched
+          detailedCast.push(...fetched);
 
           if (group) {
             // Group by status: Alive, Deceased, Unknown
