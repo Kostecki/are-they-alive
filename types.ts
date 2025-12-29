@@ -5,6 +5,7 @@ export type NormalizedCast = {
   gender: number;
   profile_path: string | null;
   characters: string[];
+  order: number;
   birthday: string | null;
   deathday: string | null;
 };

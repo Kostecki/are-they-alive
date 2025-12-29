@@ -12,10 +12,10 @@ import {
 import type { NormalizedCast } from "types";
 
 type InputProps = {
-	cast: NormalizedCast[];
+	castSections: { title: string; members: NormalizedCast[] }[];
 	loadingCast: boolean;
 	hasMoreCast: boolean;
-	fetchMoreCast: (reset?: boolean, offset?: number) => void;
+	loadMore: () => void;
 	castEndRef: React.RefObject<HTMLDivElement | null>;
 };
 
@@ -48,99 +48,112 @@ function showRole(member: NormalizedCast) {
 }
 
 export default function CastList({
-	cast,
+	castSections,
 	loadingCast,
 	hasMoreCast,
-	fetchMoreCast,
+	loadMore,
 	castEndRef,
 }: InputProps) {
+	const hasCast = castSections.some((section) => section.members.length > 0);
 	return (
 		<Box mt="xl">
-			{cast.length === 0 && loadingCast && (
+			{!hasCast && loadingCast && (
 				<Flex justify="center">
 					<Loader size="xs" />
 				</Flex>
 			)}
-			{cast.length === 0 && !loadingCast && <div>No cast available</div>}
+			{!hasCast && !loadingCast && <div>No cast available</div>}
 
-			{cast.length > 0 && (
-				<>
-					<SimpleGrid cols={2} spacing="md">
-						{cast.map((member) => {
-							return (
-								<Anchor
-									key={member.id}
-									underline="never"
-									href={`https://www.themoviedb.org/person/${member.id}`}
-									target="_blank"
-									rel="noopener"
-								>
-									<Card
-										padding="xs"
-										shadow="sm"
-										mb="sm"
-										radius="md"
-										withBorder
-										sx={() => ({
-											opacity: member.deathday ? 0.5 : 1,
-											border: "1px solid transparent",
-											transition: "border 0.2s, box-shadow 0.2s",
+			{hasCast &&
+				castSections.map((section) => (
+					<Box key={section.title}>
+						{section.title && (
+							<Text fw={600} mb="xs">
+								{section.title}
+							</Text>
+						)}
 
-											"&:hover": {
-												border: "1px solid #636363",
-												boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-											},
-										})}
+						<SimpleGrid cols={2} spacing="md">
+							{section.members.map((member) => {
+								return (
+									<Anchor
+										key={member.id}
+										underline="never"
+										href={`https://www.themoviedb.org/person/${member.id}`}
+										target="_blank"
+										rel="noopener"
 									>
-										<Flex>
-											{member.deathday && (
-												<Text size="xs" pos="absolute" top="10px" right="10px">
-													🪦
-												</Text>
-											)}
-											<Image
-												w="45px"
-												radius="md"
-												src={`https://image.tmdb.org/t/p/w45${member.profile_path}`}
-												fallbackSrc={
-													member.gender === 2 ? "/male.svg" : "/female.svg"
-												}
-											/>
+										<Card
+											padding="xs"
+											shadow="sm"
+											mb="sm"
+											radius="md"
+											withBorder
+											sx={() => ({
+												opacity: member.deathday ? 0.5 : 1,
+												border: "1px solid transparent",
+												transition: "border 0.2s, box-shadow 0.2s",
 
-											<Flex direction="column">
-												<Text ml="sm" fw={500}>
-													{member.name}
-												</Text>
-												<Text ml="sm" c="dimmed" fz="sm">
-													{showRole(member)}
-												</Text>
-												<Text ml="sm" c="dimmed" fz="sm">
-													{formatAge(member.birthday, member.deathday)}
-												</Text>
+												"&:hover": {
+													border: "1px solid #636363",
+													boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+												},
+											})}
+										>
+											<Flex>
+												{member.deathday && (
+													<Text
+														size="xs"
+														pos="absolute"
+														top="10px"
+														right="10px"
+													>
+														🪦
+													</Text>
+												)}
+												<Image
+													w="45px"
+													radius="md"
+													src={`https://image.tmdb.org/t/p/w45${member.profile_path}`}
+													fallbackSrc={
+														member.gender === 2 ? "/male.svg" : "/female.svg"
+													}
+												/>
+
+												<Flex direction="column">
+													<Text ml="sm" fw={500}>
+														{member.name}
+													</Text>
+													<Text ml="sm" c="dimmed" fz="sm">
+														{showRole(member)}
+													</Text>
+													<Text ml="sm" c="dimmed" fz="sm">
+														{formatAge(member.birthday, member.deathday)}
+													</Text>
+												</Flex>
 											</Flex>
-										</Flex>
-									</Card>
-								</Anchor>
-							);
-						})}
+										</Card>
+									</Anchor>
+								);
+							})}
 
-						<div ref={castEndRef} />
-					</SimpleGrid>
+							<div ref={castEndRef} />
+						</SimpleGrid>
+					</Box>
+				))}
 
-					{hasMoreCast && (
-						<Flex justify="center" mt="md" mb="xl">
-							<Button
-								variant="outline"
-								onClick={() => fetchMoreCast(false, cast.length)}
-								disabled={loadingCast}
-								loading={loadingCast}
-								loaderProps={{ type: "dots" }}
-							>
-								Load more
-							</Button>
-						</Flex>
-					)}
-				</>
+			{hasMoreCast && (
+				<Flex justify="center" mt="md" mb="xl">
+					<Button
+						variant="outline"
+						onClick={loadMore}
+						disabled={loadingCast}
+						loading={loadingCast}
+						loaderProps={{ type: "dots" }}
+					>
+						Load more
+					</Button>
+				</Flex>
 			)}
 		</Box>
 	);

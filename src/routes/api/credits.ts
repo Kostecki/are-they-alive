@@ -23,7 +23,13 @@ export const Route = createFileRoute("/api/credits")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const { id, type, offset = 0, limit = 14 } = await request.json();
+        const {
+          id,
+          type,
+          offset = 0,
+          limit = 20,
+          group = true,
+        } = await request.json();
 
         if (!id || !type || (type !== "movie" && type !== "tv")) {
           return new Response("Invalid request", { status: 400 });
@@ -73,6 +79,27 @@ export const Route = createFileRoute("/api/credits")({
               };
             })
           );
+
+          if (group) {
+            // Group by status: Alive, Deceased, Unknown
+            detailedCast.sort((a, b) => {
+              const getStatus = (member: NormalizedCast) => {
+                console.log(member);
+                if (member.deathday) return 2; // Deceased
+                if (member.birthday) return 0; // Alive
+                return 1; // Unknown
+              };
+
+              const statusA = getStatus(a);
+              const statusB = getStatus(b);
+
+              if (statusA !== statusB) {
+                return statusA - statusB;
+              }
+
+              return (a.order ?? 0) - (b.order ?? 0);
+            });
+          }
 
           return Response.json({
             id,

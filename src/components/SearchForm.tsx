@@ -1,11 +1,12 @@
 import { Box, type BoxProps, Divider } from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import ky from "ky";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MultiSearchResult, Search } from "tmdb-ts/dist/types/search";
 import type { NormalizedCast, Result } from "types";
 
 import CastList from "./CastList";
+import { GroupSortHeader } from "./GroupSortHeader";
 import ItemDetails from "./ItemDetails";
 import SearchInput from "./SearchInput";
 
@@ -17,14 +18,17 @@ export default function SearchForm({ ...props }: InputProps) {
 	const [loading, setLoading] = useState(false);
 	const [debounced] = useDebouncedValue(value, 300);
 	const [selectedItem, setSelectedItem] = useState<Result | null>(null);
-	const [cast, setCast] = useState<NormalizedCast[]>([]);
+	const [rawCast, setRawCast] = useState<NormalizedCast[]>([]);
 	const [loadingCast, setLoadingCast] = useState(true);
 	const [castTotal, setCastTotal] = useState(0);
+	const [groupByStatus, setGroupByStatus] = useState(true);
+	const [sortBy, setSortBy] = useState("appearance");
+	const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
 
 	const castEndRef = useRef<HTMLDivElement>(null);
 	const skipNextSearch = useRef(false);
 
-	const hasMoreCast = cast.length < castTotal;
+	const hasMoreCast = rawCast.length < castTotal;
 
 	const fetchCast = useCallback(
 		async (reset = false, offset?: number) => {
@@ -38,7 +42,6 @@ export default function SearchForm({ ...props }: InputProps) {
 							id: selectedItem.id,
 							type: selectedItem.mediaType,
 							offset: reset ? 0 : (offset ?? 0),
-							limit: 14,
 						},
 					})
 					.json()) as {
@@ -48,16 +51,7 @@ export default function SearchForm({ ...props }: InputProps) {
 					total: number;
 				};
 
-				setCast((prev) => {
-					const newCast = reset ? data.cast : [...prev, ...data.cast];
-
-					// scroll to the last newly added actor
-					setTimeout(() => {
-						castEndRef.current?.scrollIntoView({ behavior: "smooth" });
-					}, 50);
-
-					return newCast;
-				});
+				setRawCast((prev) => (reset ? data.cast : [...prev, ...data.cast]));
 				setCastTotal(data.total);
 			} catch (err) {
 				console.error(err);
@@ -67,6 +61,75 @@ export default function SearchForm({ ...props }: InputProps) {
 		},
 		[selectedItem],
 	);
+
+	const castSections = useMemo(() => {
+		if (!rawCast.length) return [];
+
+		const getStatus = (member: NormalizedCast) => {
+			if (member.deathday) return "Deceased";
+			if (member.birthday) return "Alive";
+			return "Unknown";
+		};
+
+		// Sorting
+		const compare = (a: NormalizedCast, b: NormalizedCast) => {
+			let result = 0;
+
+			switch (sortBy) {
+				case "appearance":
+					result = (a.order ?? 0) - (b.order ?? 0);
+					break;
+				case "alphabetical":
+					result = (a.name ?? "").localeCompare(b.name ?? "");
+					break;
+				case "age": {
+					const getAge = (member: NormalizedCast) => {
+						if (!member.birthday) return 0;
+						const birth = new Date(member.birthday);
+						const death = member.deathday
+							? new Date(member.deathday)
+							: new Date();
+						let age = death.getFullYear() - birth.getFullYear();
+						const m = death.getMonth() - birth.getMonth();
+
+						if (m < 0 || (m === 0 && death.getDate() < birth.getDate())) age--;
+
+						return age;
+					};
+					result = getAge(a) - getAge(b);
+					break;
+				}
+			}
+
+			return sortOrder === "asc" ? result : -result;
+		};
+
+		if (!groupByStatus) {
+			return [{ title: "", members: [...rawCast].sort(compare) }];
+		}
+
+		// Group by status
+		const groups: Record<string, NormalizedCast[]> = {
+			Alive: [],
+			Deceased: [],
+			Unknown: [],
+		};
+
+		rawCast.forEach((member) => {
+			groups[getStatus(member)].push(member);
+		});
+
+		// Sort each group individually
+		Object.keys(groups).forEach((status) => {
+			groups[status].sort(compare);
+		});
+
+		return [
+			{ title: "Alive", members: groups.Alive },
+			{ title: "Deceased", members: groups.Deceased },
+			{ title: "Unknown", members: groups.Unknown },
+		].filter((section) => section.members.length > 0);
+	}, [rawCast, groupByStatus, sortBy, sortOrder]);
 
 	useEffect(() => {
 		if (!debounced || debounced.length < 2) {
@@ -158,22 +221,34 @@ export default function SearchForm({ ...props }: InputProps) {
 				onSelect={(selected) => {
 					setValue(`${selected.label} (${selected.year})`);
 					setSelectedItem(selected);
-					setCast([]);
+					setRawCast([]);
 					setCastTotal(0);
 				}}
 			/>
-
 			{selectedItem && (
 				<>
 					<Divider my="lg" />
 
 					<ItemDetails item={selectedItem} />
 
+					<Divider mb="md" mt="xl" opacity="0.6" />
+
+					<GroupSortHeader
+						groupByStatus={groupByStatus}
+						setGroupByStatus={setGroupByStatus}
+						sortBy={sortBy}
+						setSortBy={setSortBy}
+						sortOrder={sortOrder}
+						setSortOrder={setSortOrder}
+					/>
+
+					<Divider my="md" opacity="0.6" />
+
 					<CastList
-						cast={cast}
+						castSections={castSections}
 						loadingCast={loadingCast}
 						hasMoreCast={hasMoreCast}
-						fetchMoreCast={fetchCast}
+						loadMore={() => fetchCast(false, rawCast.length)}
 						castEndRef={castEndRef}
 					/>
 				</>
