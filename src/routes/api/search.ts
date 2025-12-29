@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { TMDB } from "tmdb-ts";
 
-const tmdb = new TMDB(process.env.TMDB_API_KEY || "");
+import tmdb from "~/utils/tmdb";
 
 export const Route = createFileRoute("/api/search")({
   server: {

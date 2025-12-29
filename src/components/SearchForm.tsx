@@ -6,12 +6,17 @@ import type { MultiSearchResult, Search } from "tmdb-ts/dist/types/search";
 
 import type { NormalizedCast, Result } from "~/types";
 
+import { mapApiDetailsToResult } from "~/utils/helpers";
+
 import CastList from "./CastList";
 import { GroupSortHeader } from "./GroupSortHeader";
 import ItemDetails from "./ItemDetails";
 import SearchInput from "./SearchInput";
 
-type InputProps = {} & BoxProps;
+type InputProps = {
+	type?: string;
+	id?: string;
+} & BoxProps;
 
 export default function SearchForm({ ...props }: InputProps) {
 	const [value, setValue] = useState("");
@@ -28,6 +33,7 @@ export default function SearchForm({ ...props }: InputProps) {
 
 	const castEndRef = useRef<HTMLDivElement>(null);
 	const skipNextSearch = useRef(false);
+	const selectedRef = useRef<Result | null>(null);
 
 	const hasMoreCast = rawCast.length < castTotal;
 
@@ -164,33 +170,11 @@ export default function SearchForm({ ...props }: InputProps) {
 				)
 				.map((item) => {
 					if (item.media_type === "movie") {
-						return {
-							id: item.id,
-							mediaType: "movie",
-							year: item.release_date.split("-")[0],
-							label: item.original_title,
-							subtitle:
-								item.title !== item.original_title ? item.title : undefined,
-							backdrop_path: item.backdrop_path,
-							overview: item.overview,
-							poster_path: item.poster_path,
-							original_language: item.original_language,
-						};
+						return mapApiDetailsToResult(item, "movie");
 					}
 
 					if (item.media_type === "tv") {
-						return {
-							id: item.id,
-							mediaType: "tv",
-							year: item.first_air_date.split("-")[0],
-							label: item.original_name,
-							subtitle:
-								item.name !== item.original_name ? item.name : undefined,
-							backdrop_path: item.backdrop_path,
-							overview: item.overview,
-							poster_path: item.poster_path,
-							original_language: item.original_language,
-						};
+						return mapApiDetailsToResult(item, "tv");
 					}
 
 					throw new Error("Unknown media type");
@@ -212,19 +196,54 @@ export default function SearchForm({ ...props }: InputProps) {
 		fetchCast(true);
 	}, [selectedItem, fetchCast]);
 
+	useEffect(() => {
+		selectedRef.current = selectedItem;
+	}, [selectedItem]);
+
+	useEffect(() => {
+		// If type and id props are provided and valid, auto-select the item
+		if (!props.type || !props.id) return;
+
+		const numericId = Number(props.id);
+		if (
+			selectedRef.current?.id === numericId &&
+			selectedRef.current?.mediaType === props.type
+		)
+			return;
+
+		let aborted = false;
+
+		async function fetchData() {
+			try {
+				const details = (await ky
+					.get(`/api/${props.type}/${numericId}`)
+					.json()) as any; // TODO: Type
+
+				if (aborted) return;
+
+				setSelectedItem(
+					mapApiDetailsToResult(details, props.type as "movie" | "tv"),
+				);
+			} catch (err) {
+				console.error("Error fetching data for auto-select:", err);
+			}
+		}
+
+		fetchData();
+
+		return () => {
+			aborted = true;
+		};
+	}, [props.type, props.id]);
+
 	return (
 		<Box {...props}>
 			<SearchInput
 				value={value}
 				setValue={setValue}
+				setSelectedItem={setSelectedItem}
 				results={results}
 				loading={loading}
-				onSelect={(selected) => {
-					setValue(`${selected.label} (${selected.year})`);
-					setSelectedItem(selected);
-					setRawCast([]);
-					setCastTotal(0);
-				}}
 			/>
 			{selectedItem && (
 				<>

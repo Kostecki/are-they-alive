@@ -1,22 +1,24 @@
 import { Combobox, Loader, TextInput, useCombobox } from "@mantine/core";
+import { useNavigate } from "@tanstack/react-router";
 
 import type { Result } from "~/types";
 
 type InputProps = {
 	value: string;
 	setValue: (value: string) => void;
+	setSelectedItem: (item: Result) => void;
 	results: Result[];
 	loading: boolean;
-	onSelect: (selected: Result) => void;
 };
 
 export default function SearchInput({
 	value,
 	setValue,
+	setSelectedItem,
 	results,
 	loading,
-	onSelect,
 }: InputProps) {
+	const navigate = useNavigate();
 	const combobox = useCombobox();
 
 	const movies = results.filter((r) => r.mediaType === "movie");
@@ -26,9 +28,20 @@ export default function SearchInput({
 		const selected = results.find((r) => String(r.id) === optionValue);
 		if (!selected) return;
 
-		setValue(`${selected.label} (${selected.year})`);
+		setSelectedItem(selected);
 
-		onSelect(selected);
+		const titleSlug = selected.label
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, "-")
+			.replace(/^-+|-+$/g, "");
+
+		navigate({
+			to: "/$mediaType/$identifier",
+			params: {
+				mediaType: selected.mediaType,
+				identifier: `${selected.id}-${titleSlug}`,
+			},
+		});
 
 		combobox.closeDropdown();
 	};

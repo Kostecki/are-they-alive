@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
 import { Route as ApiCreditsRouteImport } from './routes/api/credits'
+import { Route as MediaTypeIdentifierRouteImport } from './routes/$mediaType.$identifier'
+import { Route as ApiTvIdRouteImport } from './routes/api/tv.$id'
+import { Route as ApiMovieIdRouteImport } from './routes/api/movie.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +31,81 @@ const ApiCreditsRoute = ApiCreditsRouteImport.update({
   path: '/api/credits',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MediaTypeIdentifierRoute = MediaTypeIdentifierRouteImport.update({
+  id: '/$mediaType/$identifier',
+  path: '/$mediaType/$identifier',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTvIdRoute = ApiTvIdRouteImport.update({
+  id: '/api/tv/$id',
+  path: '/api/tv/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMovieIdRoute = ApiMovieIdRouteImport.update({
+  id: '/api/movie/$id',
+  path: '/api/movie/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/$mediaType/$identifier': typeof MediaTypeIdentifierRoute
   '/api/credits': typeof ApiCreditsRoute
   '/api/search': typeof ApiSearchRoute
+  '/api/movie/$id': typeof ApiMovieIdRoute
+  '/api/tv/$id': typeof ApiTvIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/$mediaType/$identifier': typeof MediaTypeIdentifierRoute
   '/api/credits': typeof ApiCreditsRoute
   '/api/search': typeof ApiSearchRoute
+  '/api/movie/$id': typeof ApiMovieIdRoute
+  '/api/tv/$id': typeof ApiTvIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/$mediaType/$identifier': typeof MediaTypeIdentifierRoute
   '/api/credits': typeof ApiCreditsRoute
   '/api/search': typeof ApiSearchRoute
+  '/api/movie/$id': typeof ApiMovieIdRoute
+  '/api/tv/$id': typeof ApiTvIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/api/credits' | '/api/search'
+  fullPaths:
+    | '/'
+    | '/$mediaType/$identifier'
+    | '/api/credits'
+    | '/api/search'
+    | '/api/movie/$id'
+    | '/api/tv/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/api/credits' | '/api/search'
-  id: '__root__' | '/' | '/api/credits' | '/api/search'
+  to:
+    | '/'
+    | '/$mediaType/$identifier'
+    | '/api/credits'
+    | '/api/search'
+    | '/api/movie/$id'
+    | '/api/tv/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/$mediaType/$identifier'
+    | '/api/credits'
+    | '/api/search'
+    | '/api/movie/$id'
+    | '/api/tv/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  MediaTypeIdentifierRoute: typeof MediaTypeIdentifierRoute
   ApiCreditsRoute: typeof ApiCreditsRoute
   ApiSearchRoute: typeof ApiSearchRoute
+  ApiMovieIdRoute: typeof ApiMovieIdRoute
+  ApiTvIdRoute: typeof ApiTvIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,13 +131,37 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCreditsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$mediaType/$identifier': {
+      id: '/$mediaType/$identifier'
+      path: '/$mediaType/$identifier'
+      fullPath: '/$mediaType/$identifier'
+      preLoaderRoute: typeof MediaTypeIdentifierRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tv/$id': {
+      id: '/api/tv/$id'
+      path: '/api/tv/$id'
+      fullPath: '/api/tv/$id'
+      preLoaderRoute: typeof ApiTvIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/movie/$id': {
+      id: '/api/movie/$id'
+      path: '/api/movie/$id'
+      fullPath: '/api/movie/$id'
+      preLoaderRoute: typeof ApiMovieIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  MediaTypeIdentifierRoute: MediaTypeIdentifierRoute,
   ApiCreditsRoute: ApiCreditsRoute,
   ApiSearchRoute: ApiSearchRoute,
+  ApiMovieIdRoute: ApiMovieIdRoute,
+  ApiTvIdRoute: ApiTvIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

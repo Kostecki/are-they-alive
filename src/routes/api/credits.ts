@@ -1,17 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  type AggregateCast,
-  type AggregateCredits,
-  type Cast,
-  type Credits,
-  TMDB,
-} from "tmdb-ts";
+import type { AggregateCast, AggregateCredits, Cast, Credits } from "tmdb-ts";
 
 import type { NormalizedCast } from "~/types";
 
 import redis from "~/utils/redis";
-
-const tmdb = new TMDB(process.env.TMDB_API_KEY || "");
+import tmdb from "~/utils/tmdb";
 
 const DEFAULT_OFFSET = 0;
 const DEFAULT_LIMIT = 500; // Number of cast members to return per request
