@@ -8,6 +8,7 @@ import {
 	Loader,
 	SimpleGrid,
 	Text,
+	Tooltip,
 } from "@mantine/core";
 
 import type { NormalizedCast } from "~/types";
@@ -125,9 +126,15 @@ export default function CastList({
 													<Text ml="sm" fw={500}>
 														{member.name}
 													</Text>
-													<Text ml="sm" c="dimmed" fz="sm">
-														{showRole(member)}
-													</Text>
+													<Tooltip
+														label={showRole(member)}
+														withArrow
+														position="right"
+													>
+														<Text ml="sm" c="dimmed" fz="sm" lineClamp={1}>
+															{showRole(member)}
+														</Text>
+													</Tooltip>
 													<Text ml="sm" c="dimmed" fz="sm">
 														{formatAge(member.birthday, member.deathday)}
 													</Text>
