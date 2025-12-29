@@ -8,7 +8,34 @@ import {
 } from "tmdb-ts";
 import type { NormalizedCast } from "types";
 
+import redis from "~/utils/redis";
+
 const tmdb = new TMDB(process.env.TMDB_API_KEY || "");
+
+const DEFAULT_OFFSET = 0;
+const DEFAULT_LIMIT = 500; // Number of cast members to return per request
+const CHUNK_SIZE = 20; // Number of concurrent requests
+const CHUNK_DELAY_MS = 100; // Delay between chunks in milliseconds
+
+async function getPersonDetailsCached(personId: number) {
+  const cacheKey = `person:${personId}`;
+  const cached = await redis.get(cacheKey);
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch (err) {
+      console.warn(`Failed to parse cached person ${personId}`, err);
+    }
+  }
+
+  // Not in cache, fetch from TMDB
+  const person = await getPersonDetails(personId);
+  if (person) {
+    await redis.set(cacheKey, JSON.stringify(person), "EX", 86400); // Cache for 1 day
+  }
+
+  return person;
+}
 
 async function getPersonDetails(personId: number) {
   try {
@@ -19,6 +46,27 @@ async function getPersonDetails(personId: number) {
   }
 }
 
+async function chunkedFetch<T, R>(
+  items: T[],
+  fn: (item: T) => Promise<R>,
+  chunkSize = CHUNK_SIZE,
+  delayMs = CHUNK_DELAY_MS
+): Promise<R[]> {
+  const results: R[] = [];
+
+  for (let i = 0; i < items.length; i += chunkSize) {
+    const chunk = items.slice(i, i + chunkSize);
+    const result = await Promise.all(chunk.map(fn));
+    results.push(...result);
+
+    if (i + chunkSize < items.length) {
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  return results;
+}
+
 export const Route = createFileRoute("/api/credits")({
   server: {
     handlers: {
@@ -26,8 +74,8 @@ export const Route = createFileRoute("/api/credits")({
         const {
           id,
           type,
-          offset = 0,
-          limit = 20,
+          offset = DEFAULT_OFFSET,
+          limit = DEFAULT_LIMIT,
           group = true,
         } = await request.json();
 
@@ -55,9 +103,10 @@ export const Route = createFileRoute("/api/credits")({
           const total = actingCast.length;
           const paginatedCast = actingCast.slice(offset, offset + limit);
 
-          const detailedCast: NormalizedCast[] = await Promise.all(
-            paginatedCast.map(async (member) => {
-              const person = await getPersonDetails(member.id);
+          const detailedCast: NormalizedCast[] = await chunkedFetch(
+            paginatedCast,
+            async (member) => {
+              const person = await getPersonDetailsCached(member.id);
 
               return {
                 id: member.id,
@@ -77,14 +126,13 @@ export const Route = createFileRoute("/api/credits")({
                 birthday: person?.birthday ?? null,
                 deathday: person?.deathday ?? null,
               };
-            })
+            }
           );
 
           if (group) {
             // Group by status: Alive, Deceased, Unknown
             detailedCast.sort((a, b) => {
               const getStatus = (member: NormalizedCast) => {
-                console.log(member);
                 if (member.deathday) return 2; // Deceased
                 if (member.birthday) return 0; // Alive
                 return 1; // Unknown

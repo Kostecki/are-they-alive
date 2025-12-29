@@ -66,10 +66,10 @@ export default function CastList({
 
 			{hasCast &&
 				castSections.map((section) => (
-					<Box key={section.title}>
+					<Box key={section.title} mb="lg">
 						{section.title && (
 							<Text fw={600} mb="xs">
-								{section.title}
+								{`${section.title} (${section.members.length})`}
 							</Text>
 						)}
 
