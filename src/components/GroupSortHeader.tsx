@@ -11,8 +11,9 @@ type InputProps = {
 
 const sortOptions = [
 	{ value: "appearance", label: "Appearance" },
-	{ value: "alphabetical", label: "Alphabetical" },
 	{ value: "age", label: "Age" },
+	{ value: "alphabetical", label: "Alphabetical" },
+	{ value: "death", label: "Death" },
 ];
 
 export function GroupSortHeader({

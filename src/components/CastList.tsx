@@ -1,8 +1,10 @@
 import {
+	Accordion,
 	Anchor,
 	Box,
 	Button,
 	Card,
+	Divider,
 	Flex,
 	Image,
 	Loader,
@@ -57,6 +59,8 @@ export default function CastList({
 	castEndRef,
 }: InputProps) {
 	const hasCast = castSections.some((section) => section.members.length > 0);
+	const sectionTitles = castSections.map((section) => section.title);
+
 	return (
 		<Box mt="xl">
 			{!hasCast && loadingCast && (
@@ -66,89 +70,98 @@ export default function CastList({
 			)}
 			{!hasCast && !loadingCast && <div>No cast available</div>}
 
-			{hasCast &&
-				castSections.map((section) => (
-					<Box key={section.title} mb="lg">
-						{section.title && (
-							<Text fw={600} mb="xs">
-								{`${section.title} (${section.members.length})`}
-							</Text>
-						)}
-
-						<SimpleGrid cols={2} spacing="md">
-							{section.members.map((member) => {
-								return (
-									<Anchor
-										key={member.id}
-										underline="never"
-										href={`https://www.themoviedb.org/person/${member.id}`}
-										target="_blank"
-										rel="noopener"
-									>
-										<Card
-											padding="xs"
-											shadow="sm"
-											mb="sm"
-											radius="md"
-											withBorder
-											sx={() => ({
-												opacity: member.deathday ? 0.5 : 1,
-												border: "1px solid transparent",
-												transition: "border 0.2s, box-shadow 0.2s",
-
-												"&:hover": {
-													border: "1px solid #636363",
-													boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
-												},
-											})}
-										>
-											<Flex>
-												{member.deathday && (
-													<Text
-														size="xs"
-														pos="absolute"
-														top="10px"
-														right="10px"
-													>
-														🪦
-													</Text>
-												)}
-												<Image
-													w="45px"
+			{hasCast && (
+				<Accordion multiple defaultValue={sectionTitles} variant="unstyled">
+					{castSections.map((section) => (
+						<Accordion.Item key={section.title} value={section.title}>
+							<Accordion.Control>
+								{section.title && (
+									<Text fw={600}>
+										{`${section.title} (${section.members.length})`}
+									</Text>
+								)}
+							</Accordion.Control>
+							<Divider opacity={0.5} mb="sm" />
+							<Accordion.Panel>
+								<SimpleGrid cols={2} spacing="md">
+									{section.members.map((member) => {
+										return (
+											<Anchor
+												key={member.id}
+												underline="never"
+												href={`https://www.themoviedb.org/person/${member.id}`}
+												target="_blank"
+												rel="noopener"
+											>
+												<Card
+													padding="xs"
+													shadow="sm"
+													mb="sm"
 													radius="md"
-													src={`https://image.tmdb.org/t/p/w45${member.profile_path}`}
-													fallbackSrc={
-														member.gender === 2 ? "/male.svg" : "/female.svg"
-													}
-												/>
+													withBorder
+													sx={() => ({
+														opacity: member.deathday ? 0.5 : 1,
+														border: "1px solid transparent",
+														transition: "border 0.2s, box-shadow 0.2s",
 
-												<Flex direction="column">
-													<Text ml="sm" fw={500}>
-														{member.name}
-													</Text>
-													<Tooltip
-														label={showRole(member)}
-														withArrow
-														position="right"
-													>
-														<Text ml="sm" c="dimmed" fz="sm" lineClamp={1}>
-															{showRole(member)}
-														</Text>
-													</Tooltip>
-													<Text ml="sm" c="dimmed" fz="sm">
-														{formatAge(member.birthday, member.deathday)}
-													</Text>
-												</Flex>
-											</Flex>
-										</Card>
-									</Anchor>
-								);
-							})}
+														"&:hover": {
+															border: "1px solid #636363",
+															boxShadow: "0 2px 8px rgba(0, 0, 0, 0.2)",
+														},
+													})}
+												>
+													<Flex>
+														{member.deathday && (
+															<Text
+																size="xs"
+																pos="absolute"
+																top="10px"
+																right="10px"
+															>
+																🪦
+															</Text>
+														)}
+														<Image
+															w="45px"
+															radius="md"
+															src={`https://image.tmdb.org/t/p/w45${member.profile_path}`}
+															fallbackSrc={
+																member.gender === 2
+																	? "/male.svg"
+																	: "/female.svg"
+															}
+														/>
 
-							<div ref={castEndRef} />
-						</SimpleGrid>
-					</Box>
-				))}
+														<Flex direction="column">
+															<Text ml="sm" fw={500}>
+																{member.name}
+															</Text>
+															<Tooltip
+																label={showRole(member)}
+																withArrow
+																position="right"
+															>
+																<Text ml="sm" c="dimmed" fz="sm" lineClamp={1}>
+																	{showRole(member)}
+																</Text>
+															</Tooltip>
+															<Text ml="sm" c="dimmed" fz="sm">
+																{formatAge(member.birthday, member.deathday)}
+															</Text>
+														</Flex>
+													</Flex>
+												</Card>
+											</Anchor>
+										);
+									})}
+
+									<div ref={castEndRef} />
+								</SimpleGrid>
+							</Accordion.Panel>
+						</Accordion.Item>
+					))}
+				</Accordion>
+			)}
 
 			{hasMoreCast && (
 				<Flex justify="center" mt="md" mb="xl">

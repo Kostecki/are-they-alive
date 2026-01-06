@@ -86,9 +86,6 @@ export default function SearchForm({ ...props }: InputProps) {
 				case "appearance":
 					result = (a.order ?? 0) - (b.order ?? 0);
 					break;
-				case "alphabetical":
-					result = (a.name ?? "").localeCompare(b.name ?? "");
-					break;
 				case "age": {
 					const getAge = (member: NormalizedCast) => {
 						if (!member.birthday) return 0;
@@ -106,6 +103,23 @@ export default function SearchForm({ ...props }: InputProps) {
 					result = getAge(a) - getAge(b);
 					break;
 				}
+				case "alphabetical":
+					result = (a.name ?? "").localeCompare(b.name ?? "");
+					break;
+				case "death":
+					if (a.deathday && b.deathday) {
+						result =
+							new Date(a.deathday).getTime() - new Date(b.deathday).getTime();
+					} else if (a.deathday) {
+						result = 1;
+					} else if (b.deathday) {
+						result = -1;
+					} else {
+						result = 0;
+					}
+					break;
+				default:
+					result = 0;
 			}
 
 			return sortOrder === "asc" ? result : -result;
