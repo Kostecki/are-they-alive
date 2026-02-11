@@ -126,7 +126,7 @@ export default function SearchForm({ ...props }: InputProps) {
 		};
 
 		if (!groupByStatus) {
-			return [{ title: "", members: [...rawCast].sort(compare) }];
+			return [{ title: "all", members: [...rawCast].sort(compare) }];
 		}
 
 		// Group by status
@@ -284,6 +284,7 @@ export default function SearchForm({ ...props }: InputProps) {
 						hasMoreCast={hasMoreCast}
 						loadMore={() => fetchCast(false, rawCast.length)}
 						castEndRef={castEndRef}
+						groupByStatus={groupByStatus}
 					/>
 				</>
 			)}
