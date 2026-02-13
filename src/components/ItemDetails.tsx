@@ -1,4 +1,12 @@
-import { Anchor, Box, type BoxProps, Grid, Image, Text } from "@mantine/core";
+import {
+	Box,
+	type BoxProps,
+	Button,
+	Flex,
+	Grid,
+	Image,
+	Text,
+} from "@mantine/core";
 
 import type { Result } from "~/types";
 
@@ -19,21 +27,42 @@ export default function ItemDetails({ item, ...props }: InputProps) {
 						}
 						alt={item.label}
 						w="100%"
+						maw={185}
+						fit="contain"
 					/>
 				</Grid.Col>
 				<Grid.Col span="auto">
 					<Box>
 						<Text fw={700}>
-							{item.label} ({item.year})
+							{item.label} ({item.year}) {item.countries?.join(" ")}
 						</Text>
 						{item.subtitle && <Text c="dimmed">{item.subtitle}</Text>}
-						<Anchor
-							href={`https://www.themoviedb.org/${item.mediaType}/${item.id}`}
-							target="_blank"
-							rel="noopener noreferrer"
-						>
-							View on TMDB
-						</Anchor>
+						<Flex gap="sm">
+							<Button
+								component="a"
+								variant="outline"
+								size="xs"
+								href={`https://www.themoviedb.org/${item.mediaType}/${item.id}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								mt="xs"
+								color="var(--mantine-color-gray-6)"
+							>
+								TMDB
+							</Button>
+							<Button
+								component="a"
+								variant="outline"
+								size="xs"
+								href={`https://www.imdb.com/title/${item.imdb_id}`}
+								target="_blank"
+								rel="noopener noreferrer"
+								mt="xs"
+								color="var(--mantine-color-gray-6)"
+							>
+								IMDB
+							</Button>
+						</Flex>
 						<Text
 							mt="sm"
 							lineClamp={4}
