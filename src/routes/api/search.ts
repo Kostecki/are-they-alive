@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import tmdb from "~/utils/tmdb";
-
 export const Route = createFileRoute("/api/search")({
   server: {
     handlers: {
@@ -14,6 +12,8 @@ export const Route = createFileRoute("/api/search")({
         }
 
         try {
+          const { getTMDB } = await import("~/utils/tmdb");
+          const tmdb = getTMDB();
           const data = await tmdb.search.multi({ query });
           return Response.json(data);
         } catch (error) {

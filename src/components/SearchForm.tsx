@@ -1,5 +1,4 @@
 import { Box, type BoxProps, Divider } from "@mantine/core";
-import { useDebouncedValue } from "@mantine/hooks";
 import ky from "ky";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { MultiSearchResult, Search } from "tmdb-ts/dist/types/search";
@@ -14,16 +13,16 @@ import ItemDetails from "./ItemDetails";
 import SearchInput from "./SearchInput";
 
 type InputProps = {
-	type?: string;
-	id?: string;
+	initialItem?: Result;
 } & BoxProps;
 
-export default function SearchForm({ ...props }: InputProps) {
-	const [value, setValue] = useState("");
+export default function SearchForm({ initialItem, ...props }: InputProps) {
+	const [debounced, setDebounced] = useState("");
 	const [results, setResults] = useState<Result[]>([]);
 	const [loading, setLoading] = useState(false);
-	const [debounced] = useDebouncedValue(value, 300);
-	const [selectedItem, setSelectedItem] = useState<Result | null>(null);
+	const [selectedItem, setSelectedItem] = useState<Result | null>(
+		initialItem ?? null,
+	);
 	const [rawCast, setRawCast] = useState<NormalizedCast[]>([]);
 	const [loadingCast, setLoadingCast] = useState(true);
 	const [castTotal, setCastTotal] = useState(0);
@@ -38,16 +37,14 @@ export default function SearchForm({ ...props }: InputProps) {
 	const hasMoreCast = rawCast.length < castTotal;
 
 	const fetchCast = useCallback(
-		async (reset = false, offset?: number) => {
-			if (!selectedItem) return;
-
+		async (item: Result, reset = false, offset?: number) => {
 			setLoadingCast(true);
 			try {
 				const data = (await ky
 					.post("/api/credits", {
 						json: {
-							id: selectedItem.id,
-							type: selectedItem.mediaType,
+							id: item.id,
+							type: item.mediaType,
 							offset: reset ? 0 : (offset ?? 0),
 						},
 					})
@@ -66,7 +63,7 @@ export default function SearchForm({ ...props }: InputProps) {
 				setLoadingCast(false);
 			}
 		},
-		[selectedItem],
+		[],
 	);
 
 	const castSections = useMemo(() => {
@@ -207,55 +204,29 @@ export default function SearchForm({ ...props }: InputProps) {
 
 	useEffect(() => {
 		if (!selectedItem) return;
-		fetchCast(true);
+
+		setRawCast([]);
+		setCastTotal(0);
+		setLoadingCast(true);
+
+		fetchCast(selectedItem, true);
 	}, [selectedItem, fetchCast]);
 
 	useEffect(() => {
 		selectedRef.current = selectedItem;
 	}, [selectedItem]);
 
+	// Sync state when initialItem prop changes (e.g., navigation)
 	useEffect(() => {
-		// If type and id props are provided and valid, auto-select the item
-		if (!props.type || !props.id) return;
-
-		const numericId = Number(props.id);
-		if (
-			selectedRef.current?.id === numericId &&
-			selectedRef.current?.mediaType === props.type
-		)
-			return;
-
-		let aborted = false;
-
-		async function fetchData() {
-			try {
-				const details = (await ky
-					.get(`/api/${props.type}/${numericId}`)
-					.json()) as any; // TODO: Type
-
-				if (aborted) return;
-
-				setSelectedItem(
-					mapApiDetailsToResult(details, props.type as "movie" | "tv"),
-				);
-			} catch (err) {
-				console.error("Error fetching data for auto-select:", err);
-			}
+		if (initialItem) {
+			setSelectedItem(initialItem);
 		}
-
-		fetchData();
-
-		return () => {
-			aborted = true;
-		};
-	}, [props.type, props.id]);
+	}, [initialItem]);
 
 	return (
 		<Box {...props}>
 			<SearchInput
-				value={value}
-				setValue={setValue}
-				setSelectedItem={setSelectedItem}
+				onDebouncedChange={setDebounced}
 				results={results}
 				loading={loading}
 			/>
@@ -282,7 +253,9 @@ export default function SearchForm({ ...props }: InputProps) {
 						castSections={castSections}
 						loadingCast={loadingCast}
 						hasMoreCast={hasMoreCast}
-						loadMore={() => fetchCast(false, rawCast.length)}
+						loadMore={() =>
+							selectedItem && fetchCast(selectedItem, false, rawCast.length)
+						}
 						castEndRef={castEndRef}
 						groupByStatus={groupByStatus}
 					/>

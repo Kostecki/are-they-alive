@@ -10,6 +10,13 @@ export type NormalizedCast = {
   deathday: string | null;
 };
 
+export type ProductionCompany = {
+  id: number;
+  logo_path: string | null;
+  name: string;
+  origin_country: string;
+};
+
 export type Result = {
   id: number;
   mediaType: "movie" | "tv";
@@ -20,4 +27,6 @@ export type Result = {
   overview: string;
   poster_path: string | null;
   original_language: string;
+  imdb_id: string;
+  countries?: string[];
 };

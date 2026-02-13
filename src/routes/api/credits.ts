@@ -1,17 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type { AggregateCast, AggregateCredits, Cast, Credits } from "tmdb-ts";
+import type Redis from "ioredis";
+import type {
+  AggregateCast,
+  AggregateCredits,
+  Cast,
+  Credits,
+  TMDB,
+} from "tmdb-ts";
 
 import type { NormalizedCast } from "~/types";
-
-import redis from "~/utils/redis";
-import tmdb from "~/utils/tmdb";
 
 const DEFAULT_OFFSET = 0;
 const DEFAULT_LIMIT = 500; // Number of cast members to return per request
 const CHUNK_SIZE = 20; // Number of concurrent requests
 const CHUNK_DELAY_MS = 100; // Delay between chunks in milliseconds
 
-async function getPersonDetailsCached(personId: number) {
+async function getPersonDetailsCached(
+  personId: number,
+  redis: Redis,
+  tmdb: TMDB,
+) {
   const cacheKey = `person:${personId}`;
   const cached = await redis.get(cacheKey);
   if (cached) {
@@ -23,7 +31,7 @@ async function getPersonDetailsCached(personId: number) {
   }
 
   // Not in cache, fetch from TMDB
-  const person = await getPersonDetails(personId);
+  const person = await getPersonDetails(personId, tmdb);
   if (person) {
     await redis.set(cacheKey, JSON.stringify(person), "EX", 86400); // Cache for 1 day
   }
@@ -31,7 +39,7 @@ async function getPersonDetailsCached(personId: number) {
   return person;
 }
 
-async function getPersonDetails(personId: number) {
+async function getPersonDetails(personId: number, tmdb: TMDB) {
   try {
     return await tmdb.people.details(personId);
   } catch (error) {
@@ -44,7 +52,7 @@ async function chunkedFetch<T, R>(
   items: T[],
   fn: (item: T) => Promise<R>,
   chunkSize = CHUNK_SIZE,
-  delayMs = CHUNK_DELAY_MS
+  delayMs = CHUNK_DELAY_MS,
 ): Promise<R[]> {
   const results: R[] = [];
 
@@ -88,6 +96,12 @@ export const Route = createFileRoute("/api/credits")({
         }
 
         try {
+          // Dynamic imports to keep server-side only
+          const { getTMDB } = await import("~/utils/tmdb");
+          const { getRedis } = await import("~/utils/redis");
+          const tmdb = getTMDB();
+          const redis = getRedis();
+
           let rawCast: Cast[] | AggregateCast[] = [];
 
           if (type === "movie") {
@@ -142,7 +156,11 @@ export const Route = createFileRoute("/api/credits")({
           const fetched: NormalizedCast[] = await chunkedFetch(
             toFetch,
             async (member) => {
-              const person = await getPersonDetailsCached(member.id);
+              const person = await getPersonDetailsCached(
+                member.id,
+                redis,
+                tmdb,
+              );
 
               return {
                 id: member.id,
@@ -155,7 +173,7 @@ export const Route = createFileRoute("/api/credits")({
                 birthday: person?.birthday ?? null,
                 deathday: person?.deathday ?? null,
               };
-            }
+            },
           );
 
           // Combine cached and fetched

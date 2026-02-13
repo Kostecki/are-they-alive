@@ -1,7 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import tmdb from "~/utils/tmdb";
-
 export const Route = createFileRoute("/api/tv/$id")({
   server: {
     handlers: {
@@ -11,6 +9,8 @@ export const Route = createFileRoute("/api/tv/$id")({
         }
 
         try {
+          const { getTMDB } = await import("~/utils/tmdb");
+          const tmdb = getTMDB();
           const data = await tmdb.tvShows.details(Number(params.id));
           return Response.json(data);
         } catch (error) {

@@ -1,35 +1,47 @@
 import { Combobox, Loader, TextInput, useCombobox } from "@mantine/core";
+import { useDebouncedValue } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 
 import type { Result } from "~/types";
 
 type InputProps = {
-	value: string;
-	setValue: (value: string) => void;
-	setSelectedItem: (item: Result) => void;
+	onDebouncedChange: (value: string) => void;
 	results: Result[];
 	loading: boolean;
 };
 
-export default function SearchInput({
-	value,
-	setValue,
-	setSelectedItem,
-	results,
-	loading,
-}: InputProps) {
+function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
+	const [value, setValue] = useState("");
+	const [debounced] = useDebouncedValue(value, 300);
 	const navigate = useNavigate();
 	const combobox = useCombobox();
+	const prevResultsLengthRef = useRef(0);
+	const inputRef = useRef<HTMLInputElement>(null);
 
-	const movies = results.filter((r) => r.mediaType === "movie");
-	const tvShows = results.filter((r) => r.mediaType === "tv");
+	// Notify parent of debounced value changes
+	useEffect(() => {
+		onDebouncedChange(debounced);
+	}, [debounced, onDebouncedChange]);
+
+	const movies = useMemo(
+		() => results.filter((r) => r.mediaType === "movie"),
+		[results],
+	);
+	const tvShows = useMemo(
+		() => results.filter((r) => r.mediaType === "tv"),
+		[results],
+	);
 
 	const handleSelect = (optionValue: string) => {
 		const selected = results.find((r) => String(r.id) === optionValue);
 		if (!selected) return;
 
-		setSelectedItem(selected);
+		// Clear the search input and remove focus
+		setValue("");
+		inputRef.current?.blur();
 
+		// Navigate to the route - the loader will handle fetching data
 		const titleSlug = selected.label
 			.toLowerCase()
 			.replace(/[^a-z0-9]+/g, "-")
@@ -46,15 +58,22 @@ export default function SearchInput({
 		combobox.closeDropdown();
 	};
 
+	// Open dropdown only when results first arrive
+	// biome-ignore lint/correctness/useExhaustiveDependencies: combobox is stable, only need to track results.length
+	useEffect(() => {
+		if (results.length > 0 && prevResultsLengthRef.current === 0) {
+			combobox.openDropdown();
+		}
+		prevResultsLengthRef.current = results.length;
+	}, [results.length]);
+
 	return (
 		<Combobox store={combobox} onOptionSubmit={handleSelect}>
 			<Combobox.Target>
 				<TextInput
+					ref={inputRef}
 					value={value}
-					onChange={(e) => {
-						setValue(e.currentTarget.value);
-						combobox.openDropdown();
-					}}
+					onChange={(e) => setValue(e.currentTarget.value)}
 					placeholder="Search movies or TV shows..."
 					rightSection={loading ? <Loader size="xs" /> : null}
 				/>
@@ -110,3 +129,5 @@ export default function SearchInput({
 		</Combobox>
 	);
 }
+
+export default memo(SearchInput);
