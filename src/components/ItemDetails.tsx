@@ -29,6 +29,7 @@ export default function ItemDetails({ item, ...props }: InputProps) {
 						w="100%"
 						maw={185}
 						fit="contain"
+						loading="lazy"
 					/>
 				</Grid.Col>
 				<Grid.Col span="auto">

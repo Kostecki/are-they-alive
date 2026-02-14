@@ -85,6 +85,7 @@ function DisplayGrid({
 									fallbackSrc={
 										member.gender === 2 ? "/male.svg" : "/female.svg"
 									}
+									loading="lazy"
 								/>
 
 								<Flex direction="column">
