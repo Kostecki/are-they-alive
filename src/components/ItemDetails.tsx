@@ -66,7 +66,7 @@ export default function ItemDetails({ item, ...props }: InputProps) {
 						</Flex>
 						<Text
 							mt="sm"
-							lineClamp={4}
+							lineClamp={8}
 							style={{ wordWrap: "break-word", whiteSpace: "break-spaces" }}
 						>
 							{item.overview}
