@@ -1,4 +1,11 @@
-import { Combobox, Loader, TextInput, useCombobox } from "@mantine/core";
+import {
+	Combobox,
+	Loader,
+	Stack,
+	Text,
+	TextInput,
+	useCombobox,
+} from "@mantine/core";
 import { useDebouncedValue } from "@mantine/hooks";
 import { useNavigate } from "@tanstack/react-router";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
@@ -16,8 +23,8 @@ function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
 	const [debounced] = useDebouncedValue(value, 300);
 	const navigate = useNavigate();
 	const combobox = useCombobox();
-	const prevResultsLengthRef = useRef(0);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const prevResultsRef = useRef<Result[]>([]);
 
 	// Notify parent of debounced value changes
 	useEffect(() => {
@@ -58,14 +65,13 @@ function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
 		combobox.closeDropdown();
 	};
 
-	// Open dropdown only when results first arrive
-	// biome-ignore lint/correctness/useExhaustiveDependencies: combobox is stable, only need to track results.length
+	// Open dropdown when new results arrive
 	useEffect(() => {
-		if (results.length > 0 && prevResultsLengthRef.current === 0) {
+		if (results !== prevResultsRef.current && results.length > 0 && value.length > 0) {
 			combobox.openDropdown();
 		}
-		prevResultsLengthRef.current = results.length;
-	}, [results.length]);
+		prevResultsRef.current = results;
+	}, [results, value.length, combobox]);
 
 	return (
 		<Combobox store={combobox} onOptionSubmit={handleSelect}>
@@ -85,17 +91,16 @@ function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
 						<Combobox.Group label="Movies">
 							{movies.map((item) => (
 								<Combobox.Option key={item.id} value={String(item.id)}>
-									{/* TODO: Mantine-ify */}
-									<div style={{ display: "flex", flexDirection: "column" }}>
-										<strong>
+									<Stack gap={2}>
+										<Text fw="bold" size="sm">
 											{item.label} ({item.year})
-										</strong>
+										</Text>
 										{item.subtitle && (
-											<div style={{ fontSize: 12, opacity: 0.6 }}>
+											<Text size="xs" c="dimmed">
 												{item.subtitle}
-											</div>
+											</Text>
 										)}
-									</div>
+									</Stack>
 								</Combobox.Option>
 							))}
 						</Combobox.Group>
@@ -105,17 +110,16 @@ function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
 						<Combobox.Group label="TV Shows">
 							{tvShows.map((item) => (
 								<Combobox.Option key={item.id} value={String(item.id)}>
-									{/* TODO: Mantine-ify */}
-									<div style={{ display: "flex", flexDirection: "column" }}>
-										<strong>
+									<Stack gap={2}>
+										<Text fw="bold" size="sm">
 											{item.label} ({item.year})
-										</strong>
+										</Text>
 										{item.subtitle && (
-											<div style={{ fontSize: 12, opacity: 0.6 }}>
+											<Text size="xs" c="dimmed">
 												{item.subtitle}
-											</div>
+											</Text>
 										)}
-									</div>
+									</Stack>
 								</Combobox.Option>
 							))}
 						</Combobox.Group>

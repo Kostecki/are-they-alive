@@ -15,6 +15,8 @@ import {
 
 import type { NormalizedCast } from "~/types";
 
+import { formatAge } from "~/utils/helpers";
+
 type InputProps = {
 	castSections: { title: string; members: NormalizedCast[] }[];
 	loadingCast: boolean;
@@ -23,30 +25,6 @@ type InputProps = {
 	castEndRef: React.RefObject<HTMLDivElement | null>;
 	groupByStatus: boolean;
 };
-
-function formatAge(birthday: string | null, deathday: string | null) {
-	if (!birthday) return "Unknown";
-
-	const birth = new Date(birthday);
-
-	if (deathday) {
-		const death = new Date(deathday);
-		let age = death.getFullYear() - birth.getFullYear();
-		const m = death.getMonth() - birth.getMonth();
-
-		if (m < 0 || (m === 0 && death.getDate() < birth.getDate())) age--;
-
-		return `${age} years old (${deathday})`;
-	} else {
-		const now = new Date();
-		let age = now.getFullYear() - birth.getFullYear();
-		const m = now.getMonth() - birth.getMonth();
-
-		if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
-
-		return `${age} years old`;
-	}
-}
 
 function showRole(member: NormalizedCast) {
 	return member.characters.join(", ") || "";
@@ -68,7 +46,7 @@ function DisplayGrid({
 						underline="never"
 						href={`https://www.themoviedb.org/person/${member.id}`}
 						target="_blank"
-						rel="noopener"
+						rel="noopener noreferrer"
 					>
 						<Card
 							padding="xs"
@@ -89,7 +67,13 @@ function DisplayGrid({
 						>
 							<Flex>
 								{member.deathday && (
-									<Text size="xs" pos="absolute" top="10px" right="10px">
+									<Text
+										size="xs"
+										pos="absolute"
+										top="10px"
+										right="10px"
+										aria-label="Deceased"
+									>
 										🪦
 									</Text>
 								)}
@@ -97,6 +81,7 @@ function DisplayGrid({
 									w="45px"
 									radius="md"
 									src={`https://image.tmdb.org/t/p/w45${member.profile_path}`}
+									alt={member.name}
 									fallbackSrc={
 										member.gender === 2 ? "/male.svg" : "/female.svg"
 									}

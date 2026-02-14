@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
+import type { MovieDetails } from "tmdb-ts/dist/types/movies";
+import type { TvShowDetails } from "tmdb-ts/dist/types/tv-shows";
 
 import HomePageLayout from "~/components/HomePageLayout";
 import SearchForm from "~/components/SearchForm";
@@ -22,10 +24,22 @@ export const Route = createFileRoute("/$mediaType/$identifier")({
 				const { getTMDB } = await import("~/utils/tmdb");
 				const tmdb = getTMDB();
 
-				const details =
-					mediaType === "movie"
-						? await tmdb.movies.details(id)
-						: await tmdb.tvShows.details(id);
+				let details:
+					| MovieDetails
+					| (TvShowDetails & { imdb_id: string | null });
+				if (mediaType === "movie") {
+					details = await tmdb.movies.details(id);
+				} else {
+					// Fetch both details and external IDs for TV shows to get IMDB ID
+					const [tvDetails, externalIds] = await Promise.all([
+						tmdb.tvShows.details(id),
+						tmdb.tvShows.externalIds(id),
+					]);
+					details = {
+						...tvDetails,
+						imdb_id: externalIds.imdb_id || null,
+					};
+				}
 
 				const result = mapApiDetailsToResult(details, mediaType);
 				return { item: result };

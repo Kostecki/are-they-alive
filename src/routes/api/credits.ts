@@ -102,6 +102,14 @@ export const Route = createFileRoute("/api/credits")({
           const tmdb = getTMDB();
           const redis = getRedis();
 
+          // Check if full credits are cached (for this offset/limit combination)
+          const creditsCacheKey = `credits:${type}:${id}:${offset}:${limit}`;
+          const cachedCredits = await redis.get(creditsCacheKey);
+
+          if (cachedCredits) {
+            return Response.json(JSON.parse(cachedCredits));
+          }
+
           let rawCast: Cast[] | AggregateCast[] = [];
 
           if (type === "movie") {
@@ -121,14 +129,20 @@ export const Route = createFileRoute("/api/credits")({
           const total = actingCast.length;
           const paginatedCast = actingCast.slice(offset, offset + limit);
 
-          // Fetch detailed info with caching
+          // Fetch detailed info with caching - use mget for batch Redis operations
+          const cacheKeys = paginatedCast.map(
+            (member) => `person:${member.id}`,
+          );
+
+          // Batch fetch all cache keys at once
+          const cachedValues = await redis.mget(...cacheKeys);
+
           const detailedCast: NormalizedCast[] = [];
           const toFetch: (Cast | AggregateCast)[] = [];
 
-          // First, try to get from cache
-          for (const member of paginatedCast) {
-            const cacheKey = `person:${member.id}`;
-            const cachedPerson = await redis.get(cacheKey);
+          // Process cached results
+          paginatedCast.forEach((member, index) => {
+            const cachedPerson = cachedValues[index];
 
             if (cachedPerson) {
               try {
@@ -150,7 +164,7 @@ export const Route = createFileRoute("/api/credits")({
             } else {
               toFetch.push(member);
             }
-          }
+          });
 
           // Fetch remaining from TMDB
           const fetched: NormalizedCast[] = await chunkedFetch(
@@ -199,12 +213,22 @@ export const Route = createFileRoute("/api/credits")({
             });
           }
 
-          return Response.json({
+          const response = {
             id,
             type,
             cast: detailedCast,
             total,
-          });
+          };
+
+          // Cache the full credits response for 1 day
+          await redis.set(
+            creditsCacheKey,
+            JSON.stringify(response),
+            "EX",
+            86400,
+          );
+
+          return Response.json(response);
         } catch (error) {
           console.error("TMDB Credits Error:", error);
 
