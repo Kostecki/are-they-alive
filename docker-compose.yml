@@ -6,6 +6,7 @@ services:
     ports:
       - 3003:3000
     environment:
+      BASE_URL: ${BASE_URL}
       TMDB_API_KEY: ${TMDB_API_KEY}
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
