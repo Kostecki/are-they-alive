@@ -20,11 +20,8 @@ export const Route = createFileRoute("/api/movie/$id")({
 					const cached = await redis.get(cacheKey);
 
 					if (cached) {
-						console.info(`[cache] movie:${id} source=redis`);
 						return Response.json(JSON.parse(cached));
 					}
-
-					console.info(`[cache] movie:${id} source=tmdb`);
 
 					// Fetch from TMDB and cache for 1 week
 					const data = await tmdb.movies.details(id);

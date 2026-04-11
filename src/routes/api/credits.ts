@@ -107,15 +107,8 @@ export const Route = createFileRoute("/api/credits")({
 					const cachedCredits = await redis.get(creditsCacheKey);
 
 					if (cachedCredits) {
-						console.info(
-							`[cache] credits:${type}:${id}:${offset}:${limit} source=redis`,
-						);
 						return Response.json(JSON.parse(cachedCredits));
 					}
-
-					console.info(
-						`[cache] credits:${type}:${id}:${offset}:${limit} source=tmdb`,
-					);
 
 					let rawCast: Cast[] | AggregateCast[] = [];
 
@@ -173,10 +166,6 @@ export const Route = createFileRoute("/api/credits")({
 							toFetch.push(member);
 						}
 					});
-
-					console.info(
-						`[cache] people total=${paginatedCast.length} redis_hits=${paginatedCast.length - toFetch.length} tmdb_fetches=${toFetch.length}`,
-					);
 
 					// Fetch remaining from TMDB
 					const fetched: NormalizedCast[] = await chunkedFetch(

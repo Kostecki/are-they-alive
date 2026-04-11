@@ -20,11 +20,8 @@ export const Route = createFileRoute("/api/tv/$id")({
 					const cached = await redis.get(cacheKey);
 
 					if (cached) {
-						console.info(`[cache] tv:${id} source=redis`);
 						return Response.json(JSON.parse(cached));
 					}
-
-					console.info(`[cache] tv:${id} source=tmdb`);
 
 					// Fetch both details and external IDs to get IMDB ID
 					const [details, externalIds] = await Promise.all([
