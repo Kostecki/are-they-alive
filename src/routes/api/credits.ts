@@ -1,11 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type Redis from "ioredis";
 import type {
-  AggregateCast,
-  AggregateCredits,
-  Cast,
-  Credits,
-  TMDB,
+	AggregateCast,
+	AggregateCredits,
+	Cast,
+	Credits,
+	TMDB,
 } from "tmdb-ts";
 
 import type { NormalizedCast } from "~/types";
@@ -16,227 +16,239 @@ const CHUNK_SIZE = 20; // Number of concurrent requests
 const CHUNK_DELAY_MS = 100; // Delay between chunks in milliseconds
 
 async function getPersonDetailsCached(
-  personId: number,
-  redis: Redis,
-  tmdb: TMDB,
+	personId: number,
+	redis: Redis,
+	tmdb: TMDB,
 ) {
-  const cacheKey = `person:${personId}`;
-  const cached = await redis.get(cacheKey);
-  if (cached) {
-    try {
-      return JSON.parse(cached);
-    } catch (err) {
-      console.warn(`Failed to parse cached person ${personId}`, err);
-    }
-  }
+	const cacheKey = `person:${personId}`;
+	const cached = await redis.get(cacheKey);
+	if (cached) {
+		try {
+			return JSON.parse(cached);
+		} catch (err) {
+			console.warn(`Failed to parse cached person ${personId}`, err);
+		}
+	}
 
-  // Not in cache, fetch from TMDB
-  const person = await getPersonDetails(personId, tmdb);
-  if (person) {
-    await redis.set(cacheKey, JSON.stringify(person), "EX", 86400); // Cache for 1 day
-  }
+	// Not in cache, fetch from TMDB
+	const person = await getPersonDetails(personId, tmdb);
+	if (person) {
+		await redis.set(cacheKey, JSON.stringify(person), "EX", 86400); // Cache for 1 day
+	}
 
-  return person;
+	return person;
 }
 
 async function getPersonDetails(personId: number, tmdb: TMDB) {
-  try {
-    return await tmdb.people.details(personId);
-  } catch (error) {
-    console.error("TMDB Person Details Error:", error);
-    return null;
-  }
+	try {
+		return await tmdb.people.details(personId);
+	} catch (error) {
+		console.error("TMDB Person Details Error:", error);
+		return null;
+	}
 }
 
 async function chunkedFetch<T, R>(
-  items: T[],
-  fn: (item: T) => Promise<R>,
-  chunkSize = CHUNK_SIZE,
-  delayMs = CHUNK_DELAY_MS,
+	items: T[],
+	fn: (item: T) => Promise<R>,
+	chunkSize = CHUNK_SIZE,
+	delayMs = CHUNK_DELAY_MS,
 ): Promise<R[]> {
-  const results: R[] = [];
+	const results: R[] = [];
 
-  for (let i = 0; i < items.length; i += chunkSize) {
-    const chunk = items.slice(i, i + chunkSize);
-    const result = await Promise.all(chunk.map(fn));
-    results.push(...result);
+	for (let i = 0; i < items.length; i += chunkSize) {
+		const chunk = items.slice(i, i + chunkSize);
+		const result = await Promise.all(chunk.map(fn));
+		results.push(...result);
 
-    if (i + chunkSize < items.length) {
-      await new Promise((resolve) => setTimeout(resolve, delayMs));
-    }
-  }
+		if (i + chunkSize < items.length) {
+			await new Promise((resolve) => setTimeout(resolve, delayMs));
+		}
+	}
 
-  return results;
+	return results;
 }
 
 function getCharacters(member: Cast | AggregateCast) {
-  if ("character" in member) {
-    return member.character ? [member.character] : [];
-  } else if ("roles" in member) {
-    return member.roles.map((r) => r.character);
-  }
+	if ("character" in member) {
+		return member.character ? [member.character] : [];
+	} else if ("roles" in member) {
+		return member.roles.map((r) => r.character);
+	}
 
-  return [];
+	return [];
 }
 
 export const Route = createFileRoute("/api/credits")({
-  server: {
-    handlers: {
-      POST: async ({ request }) => {
-        const {
-          id,
-          type,
-          offset = DEFAULT_OFFSET,
-          limit = DEFAULT_LIMIT,
-          group = true,
-        } = await request.json();
+	server: {
+		handlers: {
+			POST: async ({ request }) => {
+				const {
+					id,
+					type,
+					offset = DEFAULT_OFFSET,
+					limit = DEFAULT_LIMIT,
+					group = true,
+				} = await request.json();
 
-        if (!id || !type || (type !== "movie" && type !== "tv")) {
-          return new Response("Invalid request", { status: 400 });
-        }
+				if (!id || !type || (type !== "movie" && type !== "tv")) {
+					return new Response("Invalid request", { status: 400 });
+				}
 
-        try {
-          // Dynamic imports to keep server-side only
-          const { getTMDB } = await import("~/utils/tmdb");
-          const { getRedis } = await import("~/utils/redis");
-          const tmdb = getTMDB();
-          const redis = getRedis();
+				try {
+					// Dynamic imports to keep server-side only
+					const { getTMDB } = await import("~/utils/tmdb");
+					const { getRedis } = await import("~/utils/redis");
+					const tmdb = getTMDB();
+					const redis = getRedis();
 
-          // Check if full credits are cached (for this offset/limit combination)
-          const creditsCacheKey = `credits:${type}:${id}:${offset}:${limit}`;
-          const cachedCredits = await redis.get(creditsCacheKey);
+					// Check if full credits are cached (for this offset/limit combination)
+					const creditsCacheKey = `credits:${type}:${id}:${offset}:${limit}`;
+					const cachedCredits = await redis.get(creditsCacheKey);
 
-          if (cachedCredits) {
-            return Response.json(JSON.parse(cachedCredits));
-          }
+					if (cachedCredits) {
+						console.info(
+							`[cache] credits:${type}:${id}:${offset}:${limit} source=redis`,
+						);
+						return Response.json(JSON.parse(cachedCredits));
+					}
 
-          let rawCast: Cast[] | AggregateCast[] = [];
+					console.info(
+						`[cache] credits:${type}:${id}:${offset}:${limit} source=tmdb`,
+					);
 
-          if (type === "movie") {
-            const data: Credits = await tmdb.movies.credits(id);
-            rawCast = data.cast;
-          } else if (type === "tv") {
-            const data: AggregateCredits =
-              await tmdb.tvShows.aggregateCredits(id);
-            rawCast = data.cast;
-          }
+					let rawCast: Cast[] | AggregateCast[] = [];
 
-          // Only include acting cast members and sort by importance
-          const actingCast = rawCast
-            .filter((member) => member.known_for_department === "Acting")
-            .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+					if (type === "movie") {
+						const data: Credits = await tmdb.movies.credits(id);
+						rawCast = data.cast;
+					} else if (type === "tv") {
+						const data: AggregateCredits =
+							await tmdb.tvShows.aggregateCredits(id);
+						rawCast = data.cast;
+					}
 
-          const total = actingCast.length;
-          const paginatedCast = actingCast.slice(offset, offset + limit);
+					// Include anyone with an actual cast character credit, regardless of
+					// their primary known_for_department (e.g. directors with acting roles).
+					const actingCast = rawCast
+						.filter((member) => getCharacters(member).length > 0)
+						.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-          // Fetch detailed info with caching - use mget for batch Redis operations
-          const cacheKeys = paginatedCast.map(
-            (member) => `person:${member.id}`,
-          );
+					const total = actingCast.length;
+					const paginatedCast = actingCast.slice(offset, offset + limit);
 
-          // Batch fetch all cache keys at once
-          const cachedValues = await redis.mget(...cacheKeys);
+					// Fetch detailed info with caching - use mget for batch Redis operations
+					const cacheKeys = paginatedCast.map(
+						(member) => `person:${member.id}`,
+					);
 
-          const detailedCast: NormalizedCast[] = [];
-          const toFetch: (Cast | AggregateCast)[] = [];
+					// Batch fetch all cache keys at once
+					const cachedValues = await redis.mget(...cacheKeys);
 
-          // Process cached results
-          paginatedCast.forEach((member, index) => {
-            const cachedPerson = cachedValues[index];
+					const detailedCast: NormalizedCast[] = [];
+					const toFetch: (Cast | AggregateCast)[] = [];
 
-            if (cachedPerson) {
-              try {
-                const person = JSON.parse(cachedPerson);
-                detailedCast.push({
-                  id: member.id,
-                  name: member.name,
-                  original_name: member.original_name,
-                  gender: member.gender,
-                  profile_path: member.profile_path ?? null,
-                  characters: getCharacters(member),
-                  order: member.order,
-                  birthday: person?.birthday ?? null,
-                  deathday: person?.deathday ?? null,
-                });
-              } catch {
-                toFetch.push(member);
-              }
-            } else {
-              toFetch.push(member);
-            }
-          });
+					// Process cached results
+					paginatedCast.forEach((member, index) => {
+						const cachedPerson = cachedValues[index];
 
-          // Fetch remaining from TMDB
-          const fetched: NormalizedCast[] = await chunkedFetch(
-            toFetch,
-            async (member) => {
-              const person = await getPersonDetailsCached(
-                member.id,
-                redis,
-                tmdb,
-              );
+						if (cachedPerson) {
+							try {
+								const person = JSON.parse(cachedPerson);
+								detailedCast.push({
+									id: member.id,
+									name: member.name,
+									original_name: member.original_name,
+									gender: member.gender,
+									profile_path: member.profile_path ?? null,
+									characters: getCharacters(member),
+									order: member.order,
+									birthday: person?.birthday ?? null,
+									deathday: person?.deathday ?? null,
+								});
+							} catch {
+								toFetch.push(member);
+							}
+						} else {
+							toFetch.push(member);
+						}
+					});
 
-              return {
-                id: member.id,
-                name: member.name,
-                original_name: member.original_name,
-                gender: member.gender,
-                profile_path: member.profile_path ?? null,
-                characters: getCharacters(member),
-                order: member.order,
-                birthday: person?.birthday ?? null,
-                deathday: person?.deathday ?? null,
-              };
-            },
-          );
+					console.info(
+						`[cache] people total=${paginatedCast.length} redis_hits=${paginatedCast.length - toFetch.length} tmdb_fetches=${toFetch.length}`,
+					);
 
-          // Combine cached and fetched
-          detailedCast.push(...fetched);
+					// Fetch remaining from TMDB
+					const fetched: NormalizedCast[] = await chunkedFetch(
+						toFetch,
+						async (member) => {
+							const person = await getPersonDetailsCached(
+								member.id,
+								redis,
+								tmdb,
+							);
 
-          if (group) {
-            // Group by status: Alive, Deceased, Unknown
-            detailedCast.sort((a, b) => {
-              const getStatus = (member: NormalizedCast) => {
-                if (member.deathday) return 2; // Deceased
-                if (member.birthday) return 0; // Alive
-                return 1; // Unknown
-              };
+							return {
+								id: member.id,
+								name: member.name,
+								original_name: member.original_name,
+								gender: member.gender,
+								profile_path: member.profile_path ?? null,
+								characters: getCharacters(member),
+								order: member.order,
+								birthday: person?.birthday ?? null,
+								deathday: person?.deathday ?? null,
+							};
+						},
+					);
 
-              const statusA = getStatus(a);
-              const statusB = getStatus(b);
+					// Combine cached and fetched
+					detailedCast.push(...fetched);
 
-              if (statusA !== statusB) {
-                return statusA - statusB;
-              }
+					if (group) {
+						// Group by status: Alive, Deceased, Unknown
+						detailedCast.sort((a, b) => {
+							const getStatus = (member: NormalizedCast) => {
+								if (member.deathday) return 2; // Deceased
+								if (member.birthday) return 0; // Alive
+								return 1; // Unknown
+							};
 
-              return (a.order ?? 0) - (b.order ?? 0);
-            });
-          }
+							const statusA = getStatus(a);
+							const statusB = getStatus(b);
 
-          const response = {
-            id,
-            type,
-            cast: detailedCast,
-            total,
-          };
+							if (statusA !== statusB) {
+								return statusA - statusB;
+							}
 
-          // Cache the full credits response for 1 day
-          await redis.set(
-            creditsCacheKey,
-            JSON.stringify(response),
-            "EX",
-            86400,
-          );
+							return (a.order ?? 0) - (b.order ?? 0);
+						});
+					}
 
-          return Response.json(response);
-        } catch (error) {
-          console.error("TMDB Credits Error:", error);
+					const response = {
+						id,
+						type,
+						cast: detailedCast,
+						total,
+					};
 
-          return new Response("Failed to fetch credits", {
-            status: 500,
-          });
-        }
-      },
-    },
-  },
+					// Cache the full credits response for 1 day
+					await redis.set(
+						creditsCacheKey,
+						JSON.stringify(response),
+						"EX",
+						86400,
+					);
+
+					return Response.json(response);
+				} catch (error) {
+					console.error("TMDB Credits Error:", error);
+
+					return new Response("Failed to fetch credits", {
+						status: 500,
+					});
+				}
+			},
+		},
+	},
 });
