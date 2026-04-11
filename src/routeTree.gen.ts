@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiTrendingRouteImport } from './routes/api/trending'
 import { Route as ApiSearchRouteImport } from './routes/api/search'
+import { Route as ApiFeaturedRouteImport } from './routes/api/featured'
 import { Route as ApiCreditsRouteImport } from './routes/api/credits'
 import { Route as MediaTypeIdentifierRouteImport } from './routes/$mediaType.$identifier'
 import { Route as ApiTvIdRouteImport } from './routes/api/tv.$id'
@@ -30,6 +31,11 @@ const ApiTrendingRoute = ApiTrendingRouteImport.update({
 const ApiSearchRoute = ApiSearchRouteImport.update({
   id: '/api/search',
   path: '/api/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFeaturedRoute = ApiFeaturedRouteImport.update({
+  id: '/api/featured',
+  path: '/api/featured',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiCreditsRoute = ApiCreditsRouteImport.update({
@@ -57,6 +63,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/$mediaType/$identifier': typeof MediaTypeIdentifierRoute
   '/api/credits': typeof ApiCreditsRoute
+  '/api/featured': typeof ApiFeaturedRoute
   '/api/search': typeof ApiSearchRoute
   '/api/trending': typeof ApiTrendingRoute
   '/api/movie/$id': typeof ApiMovieIdRoute
@@ -66,6 +73,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/$mediaType/$identifier': typeof MediaTypeIdentifierRoute
   '/api/credits': typeof ApiCreditsRoute
+  '/api/featured': typeof ApiFeaturedRoute
   '/api/search': typeof ApiSearchRoute
   '/api/trending': typeof ApiTrendingRoute
   '/api/movie/$id': typeof ApiMovieIdRoute
@@ -76,6 +84,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/$mediaType/$identifier': typeof MediaTypeIdentifierRoute
   '/api/credits': typeof ApiCreditsRoute
+  '/api/featured': typeof ApiFeaturedRoute
   '/api/search': typeof ApiSearchRoute
   '/api/trending': typeof ApiTrendingRoute
   '/api/movie/$id': typeof ApiMovieIdRoute
@@ -87,6 +96,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$mediaType/$identifier'
     | '/api/credits'
+    | '/api/featured'
     | '/api/search'
     | '/api/trending'
     | '/api/movie/$id'
@@ -96,6 +106,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$mediaType/$identifier'
     | '/api/credits'
+    | '/api/featured'
     | '/api/search'
     | '/api/trending'
     | '/api/movie/$id'
@@ -105,6 +116,7 @@ export interface FileRouteTypes {
     | '/'
     | '/$mediaType/$identifier'
     | '/api/credits'
+    | '/api/featured'
     | '/api/search'
     | '/api/trending'
     | '/api/movie/$id'
@@ -115,6 +127,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MediaTypeIdentifierRoute: typeof MediaTypeIdentifierRoute
   ApiCreditsRoute: typeof ApiCreditsRoute
+  ApiFeaturedRoute: typeof ApiFeaturedRoute
   ApiSearchRoute: typeof ApiSearchRoute
   ApiTrendingRoute: typeof ApiTrendingRoute
   ApiMovieIdRoute: typeof ApiMovieIdRoute
@@ -142,6 +155,13 @@ declare module '@tanstack/react-router' {
       path: '/api/search'
       fullPath: '/api/search'
       preLoaderRoute: typeof ApiSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/featured': {
+      id: '/api/featured'
+      path: '/api/featured'
+      fullPath: '/api/featured'
+      preLoaderRoute: typeof ApiFeaturedRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/credits': {
@@ -179,6 +199,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MediaTypeIdentifierRoute: MediaTypeIdentifierRoute,
   ApiCreditsRoute: ApiCreditsRoute,
+  ApiFeaturedRoute: ApiFeaturedRoute,
   ApiSearchRoute: ApiSearchRoute,
   ApiTrendingRoute: ApiTrendingRoute,
   ApiMovieIdRoute: ApiMovieIdRoute,
