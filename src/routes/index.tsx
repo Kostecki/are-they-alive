@@ -37,7 +37,7 @@ function Home() {
 			<SearchForm mt="xl" />
 
 			{featuredItems.length > 0 && (
-				<Box mt={50}>
+				<Box>
 					<Divider my="xl" opacity={0.5} />
 					<TrendingGrid items={featuredItems} />
 				</Box>
