@@ -14,228 +14,228 @@ const MIN_VOTE_COUNT = 200;
 const ORIGINAL_LANGUAGE = "en";
 
 function loadEnvFromDotEnv() {
-  const envPath = path.resolve(".env");
+	const envPath = path.resolve(".env");
 
-  if (!existsSync(envPath)) {
-    return;
-  }
+	if (!existsSync(envPath)) {
+		return;
+	}
 
-  const contents = readFileSync(envPath, "utf8");
+	const contents = readFileSync(envPath, "utf8");
 
-  for (const line of contents.split(/\r?\n/)) {
-    const trimmed = line.trim();
+	for (const line of contents.split(/\r?\n/)) {
+		const trimmed = line.trim();
 
-    if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) {
-      continue;
-    }
+		if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) {
+			continue;
+		}
 
-    const splitIndex = trimmed.indexOf("=");
-    const key = trimmed.slice(0, splitIndex).trim();
-    const value = trimmed
-      .slice(splitIndex + 1)
-      .trim()
-      .replace(/^['"]|['"]$/g, "");
+		const splitIndex = trimmed.indexOf("=");
+		const key = trimmed.slice(0, splitIndex).trim();
+		const value = trimmed
+			.slice(splitIndex + 1)
+			.trim()
+			.replace(/^['"]|['"]$/g, "");
 
-    if (!(key in process.env)) {
-      process.env[key] = value;
-    }
-  }
+		if (!(key in process.env)) {
+			process.env[key] = value;
+		}
+	}
 }
 
 function assertApiKey() {
-  if (!process.env.TMDB_API_TOKEN) {
-    loadEnvFromDotEnv();
-  }
+	if (!process.env.TMDB_API_TOKEN) {
+		loadEnvFromDotEnv();
+	}
 
-  const apiKey = process.env.TMDB_API_TOKEN;
+	const apiKey = process.env.TMDB_API_TOKEN;
 
-  if (!apiKey) {
-    throw new Error(
-      "TMDB_API_TOKEN is missing. Set it in your environment before running this script.",
-    );
-  }
+	if (!apiKey) {
+		throw new Error(
+			"TMDB_API_TOKEN is missing. Set it in your environment before running this script.",
+		);
+	}
 
-  return apiKey;
+	return apiKey;
 }
 
 function toResult(item, mediaType) {
-  const date =
-    mediaType === "movie"
-      ? (item.release_date ?? "")
-      : (item.first_air_date ?? "");
-  const year = date ? date.slice(0, 4) : "";
+	const date =
+		mediaType === "movie"
+			? (item.release_date ?? "")
+			: (item.first_air_date ?? "");
+	const year = date ? date.slice(0, 4) : "";
 
-  return {
-    id: item.id,
-    mediaType,
-    year,
-    label:
-      mediaType === "movie"
-        ? item.original_title || item.title || ""
-        : item.original_name || item.name || "",
-    subtitle:
-      mediaType === "movie"
-        ? item.title !== item.original_title
-          ? item.title
-          : undefined
-        : item.name !== item.original_name
-          ? item.name
-          : undefined,
-    backdrop_path: item.backdrop_path ?? null,
-    overview: item.overview ?? "",
-    poster_path: item.poster_path ?? null,
-    original_language: item.original_language ?? "",
-    imdb_id: "",
-  };
+	return {
+		id: item.id,
+		mediaType,
+		year,
+		label:
+			mediaType === "movie"
+				? item.original_title || item.title || ""
+				: item.original_name || item.name || "",
+		subtitle:
+			mediaType === "movie"
+				? item.title !== item.original_title
+					? item.title
+					: undefined
+				: item.name !== item.original_name
+					? item.name
+					: undefined,
+		backdrop_path: item.backdrop_path ?? null,
+		overview: item.overview ?? "",
+		poster_path: item.poster_path ?? null,
+		original_language: item.original_language ?? "",
+		imdb_id: "",
+	};
 }
 
 async function getTopRatedPage(tmdb, mediaType, page) {
-  if (mediaType === "movie") {
-    return tmdb.movies.topRated({
-      language: "en-US",
-      page,
-    });
-  }
+	if (mediaType === "movie") {
+		return tmdb.movies.topRated({
+			language: "en-US",
+			page,
+		});
+	}
 
-  return tmdb.tvShows.topRated({
-    language: "en-US",
-    page,
-  });
+	return tmdb.tvShows.topRated({
+		language: "en-US",
+		page,
+	});
 }
 
 async function isEndedTvShow(tmdb, tvId) {
-  const details = await tmdb.tvShows.details(tvId);
-  return details.status === "Ended";
+	const details = await tmdb.tvShows.details(tvId);
+	return details.status === "Ended";
 }
 
 async function fetchCandidatesByType(tmdb, mediaType) {
-  const found = [];
-  const seen = new Set();
+	const found = [];
+	const seen = new Set();
 
-  for (let page = 1; page <= MAX_PAGES; page += 1) {
-    const data = await getTopRatedPage(tmdb, mediaType, page);
+	for (let page = 1; page <= MAX_PAGES; page += 1) {
+		const data = await getTopRatedPage(tmdb, mediaType, page);
 
-    for (const item of data.results ?? []) {
-      if (seen.has(item.id)) {
-        continue;
-      }
+		for (const item of data.results ?? []) {
+			if (seen.has(item.id)) {
+				continue;
+			}
 
-      if ((item.vote_count ?? 0) < MIN_VOTE_COUNT) {
-        continue;
-      }
+			if ((item.vote_count ?? 0) < MIN_VOTE_COUNT) {
+				continue;
+			}
 
-      const result = toResult(item, mediaType);
-      const year = Number(result.year);
+			const result = toResult(item, mediaType);
+			const year = Number(result.year);
 
-      if (
-        !year ||
-        year > MAX_YEAR ||
-        result.original_language !== ORIGINAL_LANGUAGE
-      ) {
-        continue;
-      }
+			if (
+				!year ||
+				year > MAX_YEAR ||
+				result.original_language !== ORIGINAL_LANGUAGE
+			) {
+				continue;
+			}
 
-      if (mediaType === "tv") {
-        const ended = await isEndedTvShow(tmdb, item.id);
-        if (!ended) {
-          continue;
-        }
-      }
+			if (mediaType === "tv") {
+				const ended = await isEndedTvShow(tmdb, item.id);
+				if (!ended) {
+					continue;
+				}
+			}
 
-      seen.add(item.id);
-      found.push(result);
+			seen.add(item.id);
+			found.push(result);
 
-      if (found.length >= TARGET_PER_TYPE) {
-        return found;
-      }
-    }
+			if (found.length >= TARGET_PER_TYPE) {
+				return found;
+			}
+		}
 
-    if (page >= (data.total_pages ?? 1)) {
-      break;
-    }
-  }
+		if (page >= (data.total_pages ?? 1)) {
+			break;
+		}
+	}
 
-  return found;
+	return found;
 }
 
 function toTsString(value) {
-  return JSON.stringify(value);
+	return JSON.stringify(value);
 }
 
 function renderResultLine(result) {
-  const lines = [
-    "  {",
-    `    id: ${result.id},`,
-    `    mediaType: ${toTsString(result.mediaType)},`,
-    `    year: ${toTsString(result.year)},`,
-    `    label: ${toTsString(result.label)},`,
-  ];
+	const lines = [
+		"  {",
+		`    id: ${result.id},`,
+		`    mediaType: ${toTsString(result.mediaType)},`,
+		`    year: ${toTsString(result.year)},`,
+		`    label: ${toTsString(result.label)},`,
+	];
 
-  if (result.subtitle) {
-    lines.push(`    subtitle: ${toTsString(result.subtitle)},`);
-  }
+	if (result.subtitle) {
+		lines.push(`    subtitle: ${toTsString(result.subtitle)},`);
+	}
 
-  lines.push(
-    `    backdrop_path: ${result.backdrop_path === null ? "null" : toTsString(result.backdrop_path)},`,
-    `    overview: ${toTsString(result.overview)},`,
-    `    poster_path: ${result.poster_path === null ? "null" : toTsString(result.poster_path)},`,
-    `    original_language: ${toTsString(result.original_language)},`,
-    `    imdb_id: ${toTsString(result.imdb_id)},`,
-    "  },",
-  );
+	lines.push(
+		`    backdrop_path: ${result.backdrop_path === null ? "null" : toTsString(result.backdrop_path)},`,
+		`    overview: ${toTsString(result.overview)},`,
+		`    poster_path: ${result.poster_path === null ? "null" : toTsString(result.poster_path)},`,
+		`    original_language: ${toTsString(result.original_language)},`,
+		`    imdb_id: ${toTsString(result.imdb_id)},`,
+		"  },",
+	);
 
-  return lines.join("\n");
+	return lines.join("\n");
 }
 
 function renderFile(movieCandidates, tvCandidates) {
-  const allCandidates = [...movieCandidates, ...tvCandidates];
+	const allCandidates = [...movieCandidates, ...tvCandidates];
 
-  const lines = allCandidates.map((candidate) => renderResultLine(candidate));
+	const lines = allCandidates.map((candidate) => renderResultLine(candidate));
 
-  return [
-    'import type { Result } from "~/types";',
-    "",
-    "// Generated by scripts/generate-featured-candidates.mjs",
-    `// Source endpoint: top_rated, vote_count >= ${MIN_VOTE_COUNT}, original_language=${ORIGINAL_LANGUAGE}, release <= ${MAX_YEAR}`,
-    "// TV filter: ended series only (validated via tv details status)",
-    `// Counts: movies=${movieCandidates.length}, tv=${tvCandidates.length}`,
-    "export const FEATURED_ITEMS: Result[] = [",
-    ...lines,
-    "];",
-    "",
-  ].join("\n");
+	return [
+		'import type { Result } from "~/types";',
+		"",
+		"// Generated by scripts/generate-featured-candidates.mjs",
+		`// Source endpoint: top_rated, vote_count >= ${MIN_VOTE_COUNT}, original_language=${ORIGINAL_LANGUAGE}, release <= ${MAX_YEAR}`,
+		"// TV filter: ended series only (validated via tv details status)",
+		`// Counts: movies=${movieCandidates.length}, tv=${tvCandidates.length}`,
+		"export const FEATURED_ITEMS: Result[] = [",
+		...lines,
+		"];",
+		"",
+	].join("\n");
 }
 
 async function main() {
-  const apiKey = assertApiKey();
-  const tmdb = new TMDB(apiKey);
+	const apiKey = assertApiKey();
+	const tmdb = new TMDB(apiKey);
 
-  const [movieCandidates, tvCandidates] = await Promise.all([
-    fetchCandidatesByType(tmdb, "movie"),
-    fetchCandidatesByType(tmdb, "tv"),
-  ]);
+	const [movieCandidates, tvCandidates] = await Promise.all([
+		fetchCandidatesByType(tmdb, "movie"),
+		fetchCandidatesByType(tmdb, "tv"),
+	]);
 
-  if (
-    movieCandidates.length < TARGET_PER_TYPE ||
-    tvCandidates.length < TARGET_PER_TYPE
-  ) {
-    console.warn(
-      `Warning: only found movies=${movieCandidates.length}, tv=${tvCandidates.length}.`,
-    );
-  }
+	if (
+		movieCandidates.length < TARGET_PER_TYPE ||
+		tvCandidates.length < TARGET_PER_TYPE
+	) {
+		console.warn(
+			`Warning: only found movies=${movieCandidates.length}, tv=${tvCandidates.length}.`,
+		);
+	}
 
-  await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
-  await writeFile(
-    OUTPUT_PATH,
-    renderFile(movieCandidates, tvCandidates),
-    "utf8",
-  );
+	await mkdir(path.dirname(OUTPUT_PATH), { recursive: true });
+	await writeFile(
+		OUTPUT_PATH,
+		renderFile(movieCandidates, tvCandidates),
+		"utf8",
+	);
 
-  console.log(`Wrote ${OUTPUT_PATH}`);
-  console.log(`Movies: ${movieCandidates.length}, TV: ${tvCandidates.length}`);
+	console.log(`Wrote ${OUTPUT_PATH}`);
+	console.log(`Movies: ${movieCandidates.length}, TV: ${tvCandidates.length}`);
 }
 
 main().catch((error) => {
-  console.error(error instanceof Error ? error.message : error);
-  process.exit(1);
+	console.error(error instanceof Error ? error.message : error);
+	process.exit(1);
 });

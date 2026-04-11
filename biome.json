@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.3.11/schema.json",
+	"$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
 	"vcs": {
 		"enabled": false,
 		"clientKind": "git",
@@ -11,6 +11,9 @@
 			"**",
 			"!**/.react-router",
 			"!**/.vite",
+			"!**/.output",
+			"!**/dist",
+			"!**/routeTree.gen.ts",
 			"!**/node_modules",
 			"!**/build"
 		]
@@ -26,11 +29,7 @@
 					"level": "on",
 					"options": {
 						"groups": [
-							[
-								":NODE:",
-								":PACKAGE:",
-								":PACKAGE_WITH_PROTOCOL:"
-							],
+							[":NODE:", ":PACKAGE:", ":PACKAGE_WITH_PROTOCOL:"],
 							":BLANK_LINE:",
 							[
 								"~/types",
@@ -49,10 +48,7 @@
 							":BLANK_LINE:",
 							":ALIAS:",
 							":BLANK_LINE:",
-							[
-								"../**",
-								"./**"
-							]
+							["../**", "./**"]
 						]
 					}
 				}
@@ -65,7 +61,10 @@
 			"**",
 			"!**/node_modules",
 			"!**/build",
-			"!**/.react-router"
+			"!**/.react-router",
+			"!**/.output",
+			"!**/dist",
+			"!**/routeTree.gen.ts"
 		],
 		"rules": {
 			"recommended": true,
