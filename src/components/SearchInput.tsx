@@ -67,7 +67,11 @@ function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
 
 	// Open dropdown when new results arrive
 	useEffect(() => {
-		if (results !== prevResultsRef.current && results.length > 0 && value.length > 0) {
+		if (
+			results !== prevResultsRef.current &&
+			results.length > 0 &&
+			value.length > 0
+		) {
 			combobox.openDropdown();
 		}
 		prevResultsRef.current = results;
@@ -80,7 +84,7 @@ function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
 					ref={inputRef}
 					value={value}
 					onChange={(e) => setValue(e.currentTarget.value)}
-					placeholder="Search movies or TV shows..."
+					placeholder="Search for movies or TV shows..."
 					rightSection={loading ? <Loader size="xs" /> : null}
 				/>
 			</Combobox.Target>
