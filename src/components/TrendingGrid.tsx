@@ -37,7 +37,7 @@ export default function TrendingGrid({ items, ...props }: TrendingGridProps) {
 			<SimpleGrid cols={{ base: 2, sm: 3, md: 4, lg: 5 }} spacing="md">
 				{items.map((item) => (
 					<Card
-						key={item.id}
+						key={`${item.mediaType}-${item.id}`}
 						padding="xs"
 						shadow="sm"
 						radius="md"
