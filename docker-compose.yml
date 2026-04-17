@@ -11,8 +11,6 @@ services:
       REDIS_HOST: ${REDIS_HOST}
       REDIS_PORT: ${REDIS_PORT}
       REDIS_PASSWORD: ${REDIS_PASSWORD}
-      VITE_UMAMI_SRC_URL: ${VITE_UMAMI_SRC_URL}
-      VITE_UMAMI_WEBSITE_ID: ${VITE_UMAMI_WEBSITE_ID}
   redis:
     image: redis:alpine
     restart: unless-stopped
