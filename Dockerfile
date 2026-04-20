@@ -48,6 +48,6 @@ COPY package.json pnpm-lock.yaml ./
 ENTRYPOINT ["/usr/bin/tini", "--"]
 ENV NODE_ENV=production
 
-EXPOSE 3000 3100
+EXPOSE 3000
 
 CMD ["pnpm", "start"]
