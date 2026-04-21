@@ -63,10 +63,11 @@ jobs:
           cf_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
           cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           disable_bot_fight_mode: "true"
+          bfm_propagation_delay: "30"
       - name: Update Komodo stack
         uses: fjogeleit/http-request-action@v2
         with:
-          url: "${{ vars.KOMODO_API_URL }}/execute/PullStack"
+          url: "${{ vars.KOMODO_API_URL }}/write/CheckStackForUpdate"
           method: "POST"
           customHeaders: '{"Content-Type": "application/json", "X-API-Key": "${{ secrets.KOMODO_API_KEY }}", "X-API-Secret": "${{ secrets.KOMODO_API_SECRET }}"}'
           data: '{"stack": "${{ vars.KOMODO_STACK_ID }}"}'
