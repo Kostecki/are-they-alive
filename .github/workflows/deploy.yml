@@ -72,3 +72,9 @@ jobs:
           method: "POST"
           customHeaders: '{"Content-Type": "application/json", "X-API-Key": "${{ secrets.KOMODO_API_KEY }}", "X-API-Secret": "${{ secrets.KOMODO_API_SECRET }}"}'
           data: '{"stack": "${{ vars.KOMODO_STACK_ID }}"}'
+      - name: Show Response
+        run: |
+          echo ${{ steps.myRequest.outputs.response }}
+          echo ${{ steps.myRequest.outputs.headers }}
+          echo ${{ steps.myRequest.outputs.status }}
+          echo ${{ fromJson(steps.myRequest.outputs.response).field_you_want_to_access }}
