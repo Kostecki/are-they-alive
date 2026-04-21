@@ -56,6 +56,13 @@ jobs:
             VITE_UMAMI_SRC_URL=${{ vars.VITE_UMAMI_SRC_URL }}
             VITE_UMAMI_WEBSITE_ID=${{ vars.VITE_UMAMI_WEBSITE_ID }}
 
+      - name: Bypass Cloudflare for GitHub Action
+        uses: xiaotianxt/bypass-cloudflare-for-github-action@v2.1.0
+        with:
+          cf_account_id: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          cf_zone_id: ${{ secrets.CLOUDFLARE_ZONE_ID }}
+          cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          disable_bot_fight_mode: "true"
       - name: Update Komodo stack
         uses: fjogeleit/http-request-action@v2
         with:
