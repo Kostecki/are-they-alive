@@ -64,6 +64,7 @@ jobs:
           cf_api_token: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           disable_bot_fight_mode: "true"
           bfm_propagation_delay: "30"
+
       - name: Update Komodo stack
         uses: fjogeleit/http-request-action@v2
         with:
