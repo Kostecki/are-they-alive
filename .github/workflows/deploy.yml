@@ -61,8 +61,5 @@ jobs:
         with:
           url: "${{ vars.KOMODO_API_URL }}/execute/PullStack"
           method: "POST"
-          customHeaders: |
-            "Content-Type": "application/json"
-            "X-API-Key": ${{ secrets.KOMODO_API_KEY }}
-            "X-API-Secret": ${{ secrets.KOMODO_API_SECRET }}
+          customHeaders: '{"Content-Type": "application/json", "X-API-Key": "${{ secrets.KOMODO_API_KEY }}", "X-API-Secret": "${{ secrets.KOMODO_API_SECRET }}"}'
           data: '{"stack": "${{ vars.KOMODO_STACK_ID }}"}'
