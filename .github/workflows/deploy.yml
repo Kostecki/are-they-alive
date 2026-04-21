@@ -68,11 +68,26 @@ jobs:
       - name: Trigger Komodo stack update
         id: trigger-komodo-update
         run: |
-          curl -X POST "${{ vars.KOMODO_API_URL }}/write/CheckStackForUpdate" \
+          status=$(curl -sS -X POST "${{ vars.KOMODO_API_URL }}/write/CheckStackForUpdate" \
             -H "Content-Type: application/json" \
             -H "X-API-Key: ${{ secrets.KOMODO_API_KEY }}" \
             -H "X-API-Secret: ${{ secrets.KOMODO_API_SECRET }}" \
-            -d '{"stack": "${{ vars.KOMODO_STACK_ID }}"}'
+            -d '{"stack": "${{ vars.KOMODO_STACK_ID }}"}' \
+            -D /tmp/komodo-headers.txt \
+            -o /tmp/komodo-response.txt \
+            -w "%{http_code}")
+
+          {
+            echo "status=$status"
+            echo "response<<EOF"
+            cat /tmp/komodo-response.txt
+            echo "EOF"
+            echo "headers<<EOF"
+            cat /tmp/komodo-headers.txt
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+          echo "HTTP status: $status"
       - name: Show Response
         run: |
           echo "Status: ${{ steps.trigger-komodo-update.outputs.status }}"
