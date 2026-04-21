@@ -55,3 +55,13 @@ jobs:
           build-args: |
             VITE_UMAMI_SRC_URL=${{ vars.VITE_UMAMI_SRC_URL }}
             VITE_UMAMI_WEBSITE_ID=${{ vars.VITE_UMAMI_WEBSITE_ID }}
+
+      - name: Update Komodo stack
+        uses: fjogeleit/http-request-action@v2
+        with:
+          url: "${{ vars.KOMODO_API_URL }}/execute/PullStack"
+          method: "POST"
+          customHeaders: |
+            X-API-Key: ${{ secrets.KOMODO_API_KEY }}
+            X-API-Secret: ${{ secrets.KOMODO_API_SECRET }}
+          data: '{"stack": "${{ vars.KOMODO_STACK_ID }}"}'
