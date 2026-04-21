@@ -76,30 +76,9 @@ jobs:
           bfm_propagation_delay: "30"
 
       - name: Trigger Komodo stack update
-        id: trigger-komodo-update
         run: |
-          status=$(curl -sS -X POST "${{ vars.KOMODO_API_URL }}/write/CheckStackForUpdate" \
+          curl -fsS -X POST "${{ vars.KOMODO_API_URL }}/write/CheckStackForUpdate" \
             -H "Content-Type: application/json" \
             -H "X-API-Key: ${{ secrets.KOMODO_API_KEY }}" \
             -H "X-API-Secret: ${{ secrets.KOMODO_API_SECRET }}" \
-            -d '{"stack": "${{ vars.KOMODO_STACK_ID }}"}' \
-            -D /tmp/komodo-headers.txt \
-            -o /tmp/komodo-response.txt \
-            -w "%{http_code}")
-
-          {
-            echo "status=$status"
-            echo "response<<EOF"
-            cat /tmp/komodo-response.txt
-            echo "EOF"
-            echo "headers<<EOF"
-            cat /tmp/komodo-headers.txt
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-
-          echo "HTTP status: $status"
-      - name: Show Response
-        run: |
-          echo "Status: ${{ steps.trigger-komodo-update.outputs.status }}"
-          echo "Response: ${{ steps.trigger-komodo-update.outputs.response }}"
-          echo "Headers: ${{ steps.trigger-komodo-update.outputs.headers }}"
+            -d '{"stack": "${{ vars.KOMODO_STACK_ID }}"}'

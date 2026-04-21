@@ -32,8 +32,6 @@ function Home() {
 		? details.results.slice(0, 10)
 		: [];
 
-	console.log("This is the home route");
-
 	return (
 		<HomePageLayout>
 			<SearchForm mt="xl" />
