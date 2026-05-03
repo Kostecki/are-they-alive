@@ -72,11 +72,11 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           audience: ${{ secrets.TS_AUDIENCE }}
           tags: tag:ci
-          ping: ${{ vars.TS_PING_HOST}}
+          ping: ${{ vars.TS_HOST}}
 
       - name: Trigger Komodo stack update
         run: |
-          curl -fsS -X POST "${{ vars.KOMODO_API_URL }}/write/CheckStackForUpdate" \
+          curl -fsS -X POST "http://${{ vars.TS_HOST }}:9120/write/CheckStackForUpdate" \
             -H "Content-Type: application/json" \
             -H "X-API-Key: ${{ secrets.KOMODO_API_KEY }}" \
             -H "X-API-Secret: ${{ secrets.KOMODO_API_SECRET }}" \
