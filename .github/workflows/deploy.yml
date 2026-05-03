@@ -76,7 +76,7 @@ jobs:
 
       - name: Trigger Komodo stack update
         run: |
-          curl -fsS -X POST "http://${{ vars.TS_HOST }}:9120/write/CheckStackForUpdate" \
+          curl -fsS -X POST "http://${{ vars.TS_HOST }}:${{ vars.KOMODO_PORT }}/write/CheckStackForUpdate" \
             -H "Content-Type: application/json" \
             -H "X-API-Key: ${{ secrets.KOMODO_API_KEY }}" \
             -H "X-API-Secret: ${{ secrets.KOMODO_API_SECRET }}" \
