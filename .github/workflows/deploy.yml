@@ -74,18 +74,12 @@ jobs:
       id-token: write
 
     steps:
-      - name: Tailscale
-        uses: tailscale/github-action@v4
+      - name: Deploy via Komodo
+        uses: Kostecki/shared-actions/.github/actions/deploy-komodo@main
         with:
-          oauth-client-id: ${{ vars.TS_OAUTH_CLIENT_ID }}
-          audience: api.tailscale.com/${{ vars.TS_OAUTH_CLIENT_ID }}
-          tags: tag:ci
-          ping: ${{ vars.TS_HOST}}
-
-      - name: Trigger Komodo stack update
-        run: |
-          curl -fsS -X POST "http://${{ vars.TS_HOST }}:${{ vars.KOMODO_PORT }}/write/CheckStackForUpdate" \
-            -H "Content-Type: application/json" \
-            -H "X-API-Key: ${{ secrets.KOMODO_API_KEY }}" \
-            -H "X-API-Secret: ${{ secrets.KOMODO_API_SECRET }}" \
-            -d '{"stack": "${{ vars.KOMODO_STACK_ID }}"}'
+          ts-oauth-client-id: ${{ vars.TS_OAUTH_CLIENT_ID }}
+          ts-host: ${{ vars.TS_HOST }}
+          komodo-port: ${{ vars.KOMODO_PORT }}
+          komodo-api-key: ${{ secrets.KOMODO_API_KEY }}
+          komodo-api-secret: ${{ secrets.KOMODO_API_SECRET }}
+          komodo-stack-id: ${{ vars.KOMODO_STACK_ID }}
