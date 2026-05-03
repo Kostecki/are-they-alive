@@ -5,7 +5,7 @@ WORKDIR /are-they-alive
 
 # Install all (dev) deps
 FROM base AS deps
-COPY package.json pnpm-lock.yaml ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 
 # Use a cache for the pnpm store to speed subsequent builds
 RUN --mount=type=cache,target=/root/.pnpm-store \
