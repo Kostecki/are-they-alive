@@ -66,6 +66,14 @@ jobs:
             VITE_UMAMI_SRC_URL=${{ vars.VITE_UMAMI_SRC_URL }}
             VITE_UMAMI_WEBSITE_ID=${{ vars.VITE_UMAMI_WEBSITE_ID }}
 
+  deploy:
+    needs: build-and-push-image
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+
+    steps:
       - name: Tailscale
         uses: tailscale/github-action@v4
         with:
