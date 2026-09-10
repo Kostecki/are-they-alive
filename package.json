@@ -20,9 +20,9 @@
 		"@mantine/emotion": "9.6.0",
 		"@mantine/form": "9.6.0",
 		"@mantine/hooks": "9.6.0",
-		"@tanstack/react-router": "1.170.32",
+		"@tanstack/react-router": "1.170.33",
 		"@tanstack/react-router-devtools": "1.167.1",
-		"@tanstack/react-start": "1.168.49",
+		"@tanstack/react-start": "1.168.50",
 		"ioredis": "6.0.0",
 		"ky": "2.1.0",
 		"nitro": "3.0.260610-beta",
@@ -43,6 +43,6 @@
 	},
 	"volta": {
 		"node": "26.8.1",
-		"pnpm": "11.25.0"
+		"pnpm": "11.26.0"
 	}
 }
