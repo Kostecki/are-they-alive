@@ -20,9 +20,9 @@
 		"@mantine/emotion": "9.6.1",
 		"@mantine/form": "9.6.1",
 		"@mantine/hooks": "9.6.1",
-		"@tanstack/react-router": "1.170.34",
+		"@tanstack/react-router": "1.170.35",
 		"@tanstack/react-router-devtools": "1.167.1",
-		"@tanstack/react-start": "1.168.51",
+		"@tanstack/react-start": "1.168.52",
 		"ioredis": "6.0.0",
 		"ky": "2.1.0",
 		"nitro": "3.0.260610-beta",
@@ -39,7 +39,7 @@
 		"postcss-preset-mantine": "1.18.0",
 		"postcss-simple-vars": "7.0.1",
 		"typescript": "7.0.2",
-		"vite": "8.2.2"
+		"vite": "8.3.0"
 	},
 	"volta": {
 		"node": "26.8.2",
