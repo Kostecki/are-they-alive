@@ -14,14 +14,45 @@ const DEFAULT_OFFSET = 0;
 const DEFAULT_LIMIT = 500; // Number of cast members to return per request
 const CHUNK_SIZE = 20; // Number of concurrent requests
 const CHUNK_DELAY_MS = 100; // Delay between chunks in milliseconds
+const CACHE_TTL_SECONDS = 86400; // 1 day
+
+// Cache helpers: Redis failures fall through to TMDB instead of failing the request
+async function cacheGet(redis: Redis | null, key: string) {
+	if (!redis) return null;
+	try {
+		return await redis.get(key);
+	} catch (error) {
+		console.warn(`Redis read failed for ${key}`, error);
+		return null;
+	}
+}
+
+async function cacheMget(redis: Redis | null, keys: string[]) {
+	if (!redis || keys.length === 0) return keys.map(() => null);
+	try {
+		return await redis.mget(...keys);
+	} catch (error) {
+		console.warn("Redis batch read failed for credits cache", error);
+		return keys.map(() => null);
+	}
+}
+
+async function cacheSet(redis: Redis | null, key: string, value: unknown) {
+	if (!redis) return;
+	try {
+		await redis.set(key, JSON.stringify(value), "EX", CACHE_TTL_SECONDS);
+	} catch (error) {
+		console.warn(`Redis write failed for ${key}`, error);
+	}
+}
 
 async function getPersonDetailsCached(
 	personId: number,
-	redis: Redis,
+	redis: Redis | null,
 	tmdb: TMDB,
 ) {
 	const cacheKey = `person:${personId}`;
-	const cached = await redis.get(cacheKey);
+	const cached = await cacheGet(redis, cacheKey);
 	if (cached) {
 		try {
 			return JSON.parse(cached);
@@ -33,7 +64,7 @@ async function getPersonDetailsCached(
 	// Not in cache, fetch from TMDB
 	const person = await getPersonDetails(personId, tmdb);
 	if (person) {
-		await redis.set(cacheKey, JSON.stringify(person), "EX", 86400); // Cache for 1 day
+		await cacheSet(redis, cacheKey, person);
 	}
 
 	return person;
@@ -98,13 +129,13 @@ export const Route = createFileRoute("/api/credits")({
 				try {
 					// Dynamic imports to keep server-side only
 					const { getTMDB } = await import("~/utils/tmdb");
-					const { getRedis } = await import("~/utils/redis");
+					const { getReadyRedis } = await import("~/utils/redis");
 					const tmdb = getTMDB();
-					const redis = getRedis();
+					const redis = await getReadyRedis();
 
 					// Check if full credits are cached (for this offset/limit combination)
 					const creditsCacheKey = `credits:${type}:${id}:${offset}:${limit}`;
-					const cachedCredits = await redis.get(creditsCacheKey);
+					const cachedCredits = await cacheGet(redis, creditsCacheKey);
 
 					if (cachedCredits) {
 						return Response.json(JSON.parse(cachedCredits));
@@ -138,12 +169,7 @@ export const Route = createFileRoute("/api/credits")({
 							total: 0,
 						};
 
-						await redis.set(
-							creditsCacheKey,
-							JSON.stringify(response),
-							"EX",
-							86400,
-						);
+						await cacheSet(redis, creditsCacheKey, response);
 
 						return Response.json(response);
 					}
@@ -154,8 +180,7 @@ export const Route = createFileRoute("/api/credits")({
 					);
 
 					// Batch fetch all cache keys at once
-					const cachedValues =
-						cacheKeys.length > 0 ? await redis.mget(...cacheKeys) : [];
+					const cachedValues = await cacheMget(redis, cacheKeys);
 
 					const detailedCast: NormalizedCast[] = [];
 					const toFetch: (Cast | AggregateCast)[] = [];
@@ -241,12 +266,7 @@ export const Route = createFileRoute("/api/credits")({
 					};
 
 					// Cache the full credits response for 1 day
-					await redis.set(
-						creditsCacheKey,
-						JSON.stringify(response),
-						"EX",
-						86400,
-					);
+					await cacheSet(redis, creditsCacheKey, response);
 
 					return Response.json(response);
 				} catch (error) {
