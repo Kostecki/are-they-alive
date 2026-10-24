@@ -41,8 +41,9 @@ RUN apk add --no-cache binutils && strip /usr/local/bin/node
 # version in step with the node image above.
 FROM alpine:3.24.3 AS runner
 # Node bundles its own CA certificates and time zone data, so it only needs
-# the C++ runtime; tini runs as PID 1
-RUN apk add --no-cache libstdc++ tini \
+# the C++ runtime (plus libatomic, which the x86_64 build links); tini runs
+# as PID 1
+RUN apk add --no-cache libstdc++ libatomic tini \
   && addgroup -g 1000 node \
   && adduser -u 1000 -G node -s /bin/sh -D node
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
