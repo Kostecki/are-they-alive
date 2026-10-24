@@ -12,6 +12,20 @@ import { GroupSortHeader } from "./GroupSortHeader";
 import ItemDetails from "./ItemDetails";
 import SearchInput from "./SearchInput";
 
+// The first page is small so the top-billed cast shows up quickly; the rest
+// streams in behind it. Every person not yet cached costs one TMDB request,
+// and TMDB serves ~40/s, so 50 people take about a second and a half.
+const FIRST_PAGE_SIZE = 50;
+const PAGE_SIZE = 150;
+const BATCH_SIZE = 500; // Loaded automatically, and per "Load more" click
+
+type CreditsResponse = {
+	id: number;
+	type: "movie" | "tv";
+	cast: NormalizedCast[];
+	total: number;
+};
+
 type InputProps = {
 	initialItem?: Result;
 } & BoxProps;
@@ -43,36 +57,83 @@ export default function SearchForm({ initialItem, ...props }: InputProps) {
 
 	const hasMoreCast = rawCast.length < castTotal;
 
+	const abortRef = useRef<AbortController | null>(null);
+
+	// Loads up to BATCH_SIZE cast members from `offset`, appending each page as
+	// it arrives. A fresh title loads a small first page, then requests the
+	// remaining pages in parallel (the list is sorted client-side, so arrival
+	// order doesn't matter). Starting a new load cancels the previous one.
 	const fetchCast = useCallback(
-		async (item: Result, reset = false, offset?: number) => {
+		async (item: Result, offset: number, knownTotal?: number) => {
+			abortRef.current?.abort();
+			const controller = new AbortController();
+			abortRef.current = controller;
+
 			setLoadingCast(true);
 			setCastError(null);
-			try {
-				const data = (await ky
+
+			const fetchPage = async (pageOffset: number, limit: number) => {
+				const data = await ky
 					.post("/api/credits", {
 						timeout: 30_000,
+						signal: controller.signal,
 						json: {
 							id: item.id,
 							type: item.mediaType,
-							offset: reset ? 0 : (offset ?? 0),
+							offset: pageOffset,
+							limit,
 						},
 					})
-					.json()) as {
-					id: number;
-					type: "movie" | "tv";
-					cast: NormalizedCast[];
-					total: number;
-				};
+					.json<CreditsResponse>();
 
-				setRawCast((prev) => (reset ? data.cast : [...prev, ...data.cast]));
+				if (controller.signal.aborted) return data.total;
+
+				setRawCast((prev) =>
+					pageOffset === 0 ? data.cast : [...prev, ...data.cast],
+				);
 				setCastTotal(data.total);
+
+				return data.total;
+			};
+
+			try {
+				let start = offset;
+				let total = knownTotal ?? Number.POSITIVE_INFINITY;
+
+				if (offset === 0) {
+					total = await fetchPage(0, FIRST_PAGE_SIZE);
+					start = FIRST_PAGE_SIZE;
+				}
+
+				const end = Math.min(offset + BATCH_SIZE, total);
+				const pages: Promise<number>[] = [];
+				for (
+					let pageOffset = start;
+					pageOffset < end;
+					pageOffset += PAGE_SIZE
+				) {
+					pages.push(
+						fetchPage(pageOffset, Math.min(PAGE_SIZE, end - pageOffset)),
+					);
+				}
+
+				// Let every page finish so one failure doesn't hide the others
+				const failed = (await Promise.allSettled(pages)).find(
+					(result) => result.status === "rejected",
+				);
+				if (failed) throw failed.reason;
 			} catch (err) {
+				if (controller.signal.aborted) return;
+
 				const errorMessage =
 					err instanceof Error ? err.message : "Failed to load cast members";
 				setCastError(errorMessage);
 				console.error("Error fetching cast:", err);
 			} finally {
-				setLoadingCast(false);
+				if (abortRef.current === controller) {
+					abortRef.current = null;
+					setLoadingCast(false);
+				}
 			}
 		},
 		[],
@@ -85,7 +146,9 @@ export default function SearchForm({ initialItem, ...props }: InputProps) {
 		setCastTotal(0);
 		setLoadingCast(true);
 
-		fetchCast(selectedItem, true);
+		fetchCast(selectedItem, 0);
+
+		return () => abortRef.current?.abort();
 	}, [selectedItem, fetchCast]);
 
 	useEffect(() => {
@@ -147,7 +210,7 @@ export default function SearchForm({ initialItem, ...props }: InputProps) {
 						loadingCast={loadingCast}
 						hasMoreCast={hasMoreCast}
 						loadMore={() =>
-							selectedItem && fetchCast(selectedItem, false, rawCast.length)
+							selectedItem && fetchCast(selectedItem, rawCast.length, castTotal)
 						}
 						castEndRef={castEndRef}
 						groupByStatus={groupByStatus}

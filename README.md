@@ -18,9 +18,10 @@ npx gitpick TanStack/router/tree/main/examples/react/start-basic start-basic
 
 ## Getting Started
 
-From your terminal:
+Node is pinned in `mise.toml` and pnpm in `package.json`'s `packageManager` field. From your terminal:
 
 ```sh
+mise install
 pnpm install
 pnpm dev
 ```

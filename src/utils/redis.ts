@@ -64,6 +64,16 @@ export function getRedisOptional(): Redis | null {
 				console.info("Redis reconnected, cache re-enabled.");
 			}
 		});
+
+		// The open socket would otherwise keep the process alive after the HTTP
+		// server shuts down, until Docker gives up and kills it. Requests still
+		// in flight fall through to TMDB once the connection is closed.
+		const instance = redisInstance;
+		for (const signal of ["SIGTERM", "SIGINT"] as const) {
+			process.once(signal, () => {
+				instance.disconnect();
+			});
+		}
 	}
 
 	return redisInstance;
