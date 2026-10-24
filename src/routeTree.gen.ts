@@ -10,37 +10,18 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ApiTrendingRouteImport } from './routes/api/trending'
-import { Route as ApiSearchRouteImport } from './routes/api/search'
-import { Route as ApiFeaturedRouteImport } from './routes/api/featured'
-import { Route as ApiCreditsRouteImport } from './routes/api/credits'
 import { Route as MediaTypeIdentifierRouteImport } from './routes/$mediaType.$identifier'
-import { Route as ApiTvIdRouteImport } from './routes/api/tv.$id'
+import { Route as ApiCreditsRouteImport } from './routes/api/credits'
+import { Route as ApiFeaturedRouteImport } from './routes/api/featured'
+import { Route as ApiHealthRouteImport } from './routes/api/health'
+import { Route as ApiSearchRouteImport } from './routes/api/search'
+import { Route as ApiTrendingRouteImport } from './routes/api/trending'
 import { Route as ApiMovieIdRouteImport } from './routes/api/movie.$id'
+import { Route as ApiTvIdRouteImport } from './routes/api/tv.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiTrendingRoute = ApiTrendingRouteImport.update({
-  id: '/api/trending',
-  path: '/api/trending',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiSearchRoute = ApiSearchRouteImport.update({
-  id: '/api/search',
-  path: '/api/search',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiFeaturedRoute = ApiFeaturedRouteImport.update({
-  id: '/api/featured',
-  path: '/api/featured',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiCreditsRoute = ApiCreditsRouteImport.update({
-  id: '/api/credits',
-  path: '/api/credits',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MediaTypeIdentifierRoute = MediaTypeIdentifierRouteImport.update({
@@ -48,14 +29,39 @@ const MediaTypeIdentifierRoute = MediaTypeIdentifierRouteImport.update({
   path: '/$mediaType/$identifier',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiTvIdRoute = ApiTvIdRouteImport.update({
-  id: '/api/tv/$id',
-  path: '/api/tv/$id',
+const ApiCreditsRoute = ApiCreditsRouteImport.update({
+  id: '/api/credits',
+  path: '/api/credits',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFeaturedRoute = ApiFeaturedRouteImport.update({
+  id: '/api/featured',
+  path: '/api/featured',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiHealthRoute = ApiHealthRouteImport.update({
+  id: '/api/health',
+  path: '/api/health',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSearchRoute = ApiSearchRouteImport.update({
+  id: '/api/search',
+  path: '/api/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTrendingRoute = ApiTrendingRouteImport.update({
+  id: '/api/trending',
+  path: '/api/trending',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiMovieIdRoute = ApiMovieIdRouteImport.update({
   id: '/api/movie/$id',
   path: '/api/movie/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTvIdRoute = ApiTvIdRouteImport.update({
+  id: '/api/tv/$id',
+  path: '/api/tv/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
 
@@ -64,6 +70,7 @@ export interface FileRoutesByFullPath {
   '/$mediaType/$identifier': typeof MediaTypeIdentifierRoute
   '/api/credits': typeof ApiCreditsRoute
   '/api/featured': typeof ApiFeaturedRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/search': typeof ApiSearchRoute
   '/api/trending': typeof ApiTrendingRoute
   '/api/movie/$id': typeof ApiMovieIdRoute
@@ -74,6 +81,7 @@ export interface FileRoutesByTo {
   '/$mediaType/$identifier': typeof MediaTypeIdentifierRoute
   '/api/credits': typeof ApiCreditsRoute
   '/api/featured': typeof ApiFeaturedRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/search': typeof ApiSearchRoute
   '/api/trending': typeof ApiTrendingRoute
   '/api/movie/$id': typeof ApiMovieIdRoute
@@ -85,6 +93,7 @@ export interface FileRoutesById {
   '/$mediaType/$identifier': typeof MediaTypeIdentifierRoute
   '/api/credits': typeof ApiCreditsRoute
   '/api/featured': typeof ApiFeaturedRoute
+  '/api/health': typeof ApiHealthRoute
   '/api/search': typeof ApiSearchRoute
   '/api/trending': typeof ApiTrendingRoute
   '/api/movie/$id': typeof ApiMovieIdRoute
@@ -97,6 +106,7 @@ export interface FileRouteTypes {
     | '/$mediaType/$identifier'
     | '/api/credits'
     | '/api/featured'
+    | '/api/health'
     | '/api/search'
     | '/api/trending'
     | '/api/movie/$id'
@@ -107,6 +117,7 @@ export interface FileRouteTypes {
     | '/$mediaType/$identifier'
     | '/api/credits'
     | '/api/featured'
+    | '/api/health'
     | '/api/search'
     | '/api/trending'
     | '/api/movie/$id'
@@ -117,6 +128,7 @@ export interface FileRouteTypes {
     | '/$mediaType/$identifier'
     | '/api/credits'
     | '/api/featured'
+    | '/api/health'
     | '/api/search'
     | '/api/trending'
     | '/api/movie/$id'
@@ -128,6 +140,7 @@ export interface RootRouteChildren {
   MediaTypeIdentifierRoute: typeof MediaTypeIdentifierRoute
   ApiCreditsRoute: typeof ApiCreditsRoute
   ApiFeaturedRoute: typeof ApiFeaturedRoute
+  ApiHealthRoute: typeof ApiHealthRoute
   ApiSearchRoute: typeof ApiSearchRoute
   ApiTrendingRoute: typeof ApiTrendingRoute
   ApiMovieIdRoute: typeof ApiMovieIdRoute
@@ -143,25 +156,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/trending': {
-      id: '/api/trending'
-      path: '/api/trending'
-      fullPath: '/api/trending'
-      preLoaderRoute: typeof ApiTrendingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/search': {
-      id: '/api/search'
-      path: '/api/search'
-      fullPath: '/api/search'
-      preLoaderRoute: typeof ApiSearchRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/featured': {
-      id: '/api/featured'
-      path: '/api/featured'
-      fullPath: '/api/featured'
-      preLoaderRoute: typeof ApiFeaturedRouteImport
+    '/$mediaType/$identifier': {
+      id: '/$mediaType/$identifier'
+      path: '/$mediaType/$identifier'
+      fullPath: '/$mediaType/$identifier'
+      preLoaderRoute: typeof MediaTypeIdentifierRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/credits': {
@@ -171,18 +170,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiCreditsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/$mediaType/$identifier': {
-      id: '/$mediaType/$identifier'
-      path: '/$mediaType/$identifier'
-      fullPath: '/$mediaType/$identifier'
-      preLoaderRoute: typeof MediaTypeIdentifierRouteImport
+    '/api/featured': {
+      id: '/api/featured'
+      path: '/api/featured'
+      fullPath: '/api/featured'
+      preLoaderRoute: typeof ApiFeaturedRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/tv/$id': {
-      id: '/api/tv/$id'
-      path: '/api/tv/$id'
-      fullPath: '/api/tv/$id'
-      preLoaderRoute: typeof ApiTvIdRouteImport
+    '/api/health': {
+      id: '/api/health'
+      path: '/api/health'
+      fullPath: '/api/health'
+      preLoaderRoute: typeof ApiHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/search': {
+      id: '/api/search'
+      path: '/api/search'
+      fullPath: '/api/search'
+      preLoaderRoute: typeof ApiSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/trending': {
+      id: '/api/trending'
+      path: '/api/trending'
+      fullPath: '/api/trending'
+      preLoaderRoute: typeof ApiTrendingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/movie/$id': {
@@ -190,6 +203,13 @@ declare module '@tanstack/react-router' {
       path: '/api/movie/$id'
       fullPath: '/api/movie/$id'
       preLoaderRoute: typeof ApiMovieIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/tv/$id': {
+      id: '/api/tv/$id'
+      path: '/api/tv/$id'
+      fullPath: '/api/tv/$id'
+      preLoaderRoute: typeof ApiTvIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -200,6 +220,7 @@ const rootRouteChildren: RootRouteChildren = {
   MediaTypeIdentifierRoute: MediaTypeIdentifierRoute,
   ApiCreditsRoute: ApiCreditsRoute,
   ApiFeaturedRoute: ApiFeaturedRoute,
+  ApiHealthRoute: ApiHealthRoute,
   ApiSearchRoute: ApiSearchRoute,
   ApiTrendingRoute: ApiTrendingRoute,
   ApiMovieIdRoute: ApiMovieIdRoute,
