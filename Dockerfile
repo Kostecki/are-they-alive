@@ -1,10 +1,10 @@
 # Base for dev/build
-FROM node:26-slim AS base
+FROM node:26.12.1-slim AS base
 WORKDIR /are-they-alive
 
-# Install the pnpm version pinned in package.json (volta), kept current by Renovate
+# Install the pnpm version from package.json's packageManager field, kept current by Renovate
 COPY package.json ./
-RUN npm install -g "pnpm@$(node -p "require('./package.json').volta.pnpm")"
+RUN npm install -g "pnpm@$(node -p "require('./package.json').packageManager.split('@')[1].split('+')[0]")"
 
 # Install all (dev) deps
 FROM base AS deps
@@ -29,7 +29,7 @@ ENV VITE_UMAMI_WEBSITE_ID=$VITE_UMAMI_WEBSITE_ID
 RUN pnpm run build
 
 # Final runtime image: Nitro's .output is self-contained, no node_modules needed
-FROM node:26-slim AS runner
+FROM node:26.12.1-slim AS runner
 RUN apt-get update \
   && apt-get install -y --no-install-recommends tzdata tini ca-certificates \
   && rm -rf /var/lib/apt/lists/*
