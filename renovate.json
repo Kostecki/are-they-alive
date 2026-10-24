@@ -2,13 +2,5 @@
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "lockFileMaintenance": {
     "enabled": true
-  },
-  "packageRules": [
-    {
-      "description": "One PR for every Node pin: mise.toml and the Dockerfile images, including the Alpine base that must match the node image's Alpine version",
-      "groupName": "Node.js",
-      "matchManagers": ["mise", "dockerfile"],
-      "matchDepNames": ["node", "alpine"]
-    }
-  ]
+  }
 }

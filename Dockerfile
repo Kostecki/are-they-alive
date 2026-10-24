@@ -38,7 +38,7 @@ RUN apk add --no-cache binutils && strip /usr/local/bin/node
 
 # Final runtime image: Nitro's .output is self-contained, no node_modules needed.
 # Alpine (musl) is safe because the output has no native modules; keep its
-# version in step with the node image above (Renovate groups them).
+# version in step with the node image above.
 FROM alpine:3.24.3 AS runner
 # Node bundles its own CA certificates and time zone data, so it only needs
 # the C++ runtime; tini runs as PID 1
