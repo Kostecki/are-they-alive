@@ -21,7 +21,7 @@ export default function ItemDetails({ item, ...props }: InputProps) {
 	return (
 		<Box {...props}>
 			<Grid>
-				<Grid.Col span={3}>
+				<Grid.Col span={{ base: 4, sm: 3 }}>
 					<Image
 						src={
 							item.poster_path

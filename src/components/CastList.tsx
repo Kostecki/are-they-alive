@@ -38,7 +38,7 @@ function DisplayGrid({
 	castEndRef: React.RefObject<HTMLDivElement | null>;
 }) {
 	return (
-		<SimpleGrid cols={2} spacing="md">
+		<SimpleGrid cols={{ base: 1, sm: 2 }} spacing={{ base: 0, sm: "md" }}>
 			{section.members.map((member) => {
 				return (
 					<Anchor
@@ -88,8 +88,12 @@ function DisplayGrid({
 									loading="lazy"
 								/>
 
-								<Flex direction="column">
-									<Text ml="sm" fw={500}>
+								<Flex
+									direction="column"
+									miw={0}
+									pr={member.deathday ? "lg" : 0}
+								>
+									<Text ml="sm" fw={500} lineClamp={1}>
 										{member.name}
 									</Text>
 									<Tooltip label={showRole(member)} withArrow position="right">
@@ -137,7 +141,12 @@ export default function CastList({
 			{!hasCast && !loadingCast && <div>No cast available</div>}
 
 			{hasCast && !isUngrouped && (
-				<Accordion multiple defaultValue={sectionTitles} variant="unstyled">
+				<Accordion
+					multiple
+					defaultValue={sectionTitles}
+					variant="unstyled"
+					styles={{ content: { paddingInline: 0 } }}
+				>
 					{castSections.map((section) => (
 						<Accordion.Item key={section.title} value={section.title}>
 							<Accordion.Control>

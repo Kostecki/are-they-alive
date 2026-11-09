@@ -26,7 +26,7 @@ export function GroupSortHeader({
 }: InputProps) {
 	return (
 		<Box bg="var(--mantine-color-body)">
-			<Group justify="space-between" align="center">
+			<Group justify="space-between" align="center" gap="sm">
 				<Group gap="xs">
 					<Switch
 						checked={groupByStatus}
@@ -39,7 +39,7 @@ export function GroupSortHeader({
 				<Group gap="xs">
 					<Select
 						size="xs"
-						w={150}
+						w={{ base: 130, sm: 150 }}
 						radius="md"
 						placeholder="Sort by"
 						value={sortBy}
