@@ -8,8 +8,8 @@ type InputProps = {
 
 export default function HomePageLayout({ children }: InputProps) {
 	return (
-		<Grid justify="center" pt="50">
-			<Grid.Col span={10}>
+		<Grid justify="center" pt={{ base: "md", sm: 50 }}>
+			<Grid.Col span={{ base: 12, sm: 10 }}>
 				<CustomLink to="/" underline="never" c="dimmed">
 					<Title order={1} ta="center">
 						Are They Alive?

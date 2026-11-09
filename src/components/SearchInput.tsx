@@ -1,6 +1,7 @@
 import {
 	Combobox,
 	Loader,
+	ScrollArea,
 	Stack,
 	Text,
 	TextInput,
@@ -40,8 +41,12 @@ function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
 		[results],
 	);
 
-	const formatResultLabel = (item: Result) =>
-		item.year ? `${item.label} (${item.year})` : item.label;
+	const formatResultLabel = (item: Result) => {
+		const label = item.year ? `${item.label} (${item.year})` : item.label;
+		return item.countries?.length
+			? `${label} ${item.countries.join(" ")}`
+			: label;
+	};
 
 	const handleSelect = (optionValue: string) => {
 		const selected = results.find((r) => String(r.id) === optionValue);
@@ -81,60 +86,66 @@ function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
 	}, [results, value.length, combobox]);
 
 	return (
-		<Combobox store={combobox} onOptionSubmit={handleSelect}>
+		<Combobox
+			store={combobox}
+			onOptionSubmit={handleSelect}
+			hideDetached={false}
+		>
 			<Combobox.Target>
 				<TextInput
 					ref={inputRef}
 					value={value}
 					onChange={(e) => setValue(e.currentTarget.value)}
-					placeholder="Search for movies or TV shows..."
+					placeholder="Search movies & TV, e.g. tv: matador 1978"
 					rightSection={loading ? <Loader size="xs" /> : null}
 				/>
 			</Combobox.Target>
 
 			<Combobox.Dropdown>
 				<Combobox.Options>
-					{movies.length > 0 && (
-						<Combobox.Group label="Movies">
-							{movies.map((item) => (
-								<Combobox.Option key={item.id} value={String(item.id)}>
-									<Stack gap={2}>
-										<Text fw="bold" size="sm">
-											{formatResultLabel(item)}
-										</Text>
-										{item.subtitle && (
-											<Text size="xs" c="dimmed">
-												{item.subtitle}
+					<ScrollArea.Autosize type="scroll" mah="min(400px, 60vh)">
+						{movies.length > 0 && (
+							<Combobox.Group label="Movies">
+								{movies.map((item) => (
+									<Combobox.Option key={item.id} value={String(item.id)}>
+										<Stack gap={2}>
+											<Text fw="bold" size="sm">
+												{formatResultLabel(item)}
 											</Text>
-										)}
-									</Stack>
-								</Combobox.Option>
-							))}
-						</Combobox.Group>
-					)}
+											{item.subtitle && (
+												<Text size="xs" c="dimmed">
+													{item.subtitle}
+												</Text>
+											)}
+										</Stack>
+									</Combobox.Option>
+								))}
+							</Combobox.Group>
+						)}
 
-					{tvShows.length > 0 && (
-						<Combobox.Group label="TV Shows">
-							{tvShows.map((item) => (
-								<Combobox.Option key={item.id} value={String(item.id)}>
-									<Stack gap={2}>
-										<Text fw="bold" size="sm">
-											{formatResultLabel(item)}
-										</Text>
-										{item.subtitle && (
-											<Text size="xs" c="dimmed">
-												{item.subtitle}
+						{tvShows.length > 0 && (
+							<Combobox.Group label="TV Shows">
+								{tvShows.map((item) => (
+									<Combobox.Option key={item.id} value={String(item.id)}>
+										<Stack gap={2}>
+											<Text fw="bold" size="sm">
+												{formatResultLabel(item)}
 											</Text>
-										)}
-									</Stack>
-								</Combobox.Option>
-							))}
-						</Combobox.Group>
-					)}
+											{item.subtitle && (
+												<Text size="xs" c="dimmed">
+													{item.subtitle}
+												</Text>
+											)}
+										</Stack>
+									</Combobox.Option>
+								))}
+							</Combobox.Group>
+						)}
 
-					{movies.length === 0 && tvShows.length === 0 && !loading && (
-						<Combobox.Empty>No results</Combobox.Empty>
-					)}
+						{movies.length === 0 && tvShows.length === 0 && !loading && (
+							<Combobox.Empty>No results</Combobox.Empty>
+						)}
+					</ScrollArea.Autosize>
 				</Combobox.Options>
 			</Combobox.Dropdown>
 		</Combobox>

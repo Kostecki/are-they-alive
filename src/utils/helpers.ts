@@ -64,10 +64,17 @@ function mapApiDetailsToResult(
 	details: MediaDetails,
 	type: "movie" | "tv",
 ): Result {
-	const countries = mapProductionCountries(
+	// Search results have no production companies, but carry origin_country
+	const originCountries =
+		(details as { origin_country?: string[] }).origin_country ?? [];
+	const productionCountries = mapProductionCountries(
 		(details as MovieDetails | TvShowDetailsWithImdb).production_companies ||
 			([] as ProductionCompany[]),
 	);
+	const countries =
+		productionCountries.length > 0
+			? productionCountries
+			: Array.from(new Set(originCountries)).map(countryCodeToFlagEmoji);
 
 	if (type === "movie") {
 		const movieDetails = details as MovieDetails;
