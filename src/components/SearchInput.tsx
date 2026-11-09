@@ -98,6 +98,12 @@ function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
 					onChange={(e) => setValue(e.currentTarget.value)}
 					placeholder="Search movies & TV, e.g. tv: matador 1978"
 					rightSection={loading ? <Loader size="xs" /> : null}
+					// iOS Safari zooms in on inputs with text under 16px
+					sx={(_theme, u) => ({
+						[u.smallerThan("sm")]: {
+							"& input": { fontSize: 16 },
+						},
+					})}
 				/>
 			</Combobox.Target>
 
