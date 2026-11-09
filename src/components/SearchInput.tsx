@@ -1,4 +1,5 @@
 import {
+	Code,
 	Combobox,
 	Loader,
 	ScrollArea,
@@ -96,7 +97,18 @@ function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
 					ref={inputRef}
 					value={value}
 					onChange={(e) => setValue(e.currentTarget.value)}
-					placeholder="Search movies & TV, e.g. tv: matador 1978"
+					placeholder="Search movies & TV"
+					description={
+						<>
+							Narrow it down with <Code>tv:</Code> or <Code>movie:</Code> and a
+							year,{" "}
+							<span style={{ whiteSpace: "nowrap" }}>
+								e.g. <Code>tv: matador 1978</Code>
+							</span>
+						</>
+					}
+					inputWrapperOrder={["label", "input", "description", "error"]}
+					styles={{ description: { marginTop: 6 } }}
 					rightSection={loading ? <Loader size="xs" /> : null}
 					// iOS Safari zooms in on inputs with text under 16px
 					sx={(_theme, u) => ({
