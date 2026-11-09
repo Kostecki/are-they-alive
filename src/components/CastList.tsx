@@ -141,7 +141,12 @@ export default function CastList({
 			{!hasCast && !loadingCast && <div>No cast available</div>}
 
 			{hasCast && !isUngrouped && (
-				<Accordion multiple defaultValue={sectionTitles} variant="unstyled">
+				<Accordion
+					multiple
+					defaultValue={sectionTitles}
+					variant="unstyled"
+					styles={{ content: { paddingInline: 0 } }}
+				>
 					{castSections.map((section) => (
 						<Accordion.Item key={section.title} value={section.title}>
 							<Accordion.Control>
