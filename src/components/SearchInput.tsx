@@ -109,7 +109,12 @@ function SearchInput({ onDebouncedChange, results, loading }: InputProps) {
 					}
 					inputWrapperOrder={["label", "input", "description", "error"]}
 					styles={{
-						description: { marginTop: 6, fontStyle: "italic", opacity: 0.7 },
+						description: {
+							marginTop: 6,
+							fontStyle: "italic",
+							opacity: 0.7,
+							textAlign: "center",
+						},
 					}}
 					rightSection={loading ? <Loader size="xs" /> : null}
 					// iOS Safari zooms in on inputs with text under 16px
