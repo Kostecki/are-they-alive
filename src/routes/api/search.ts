@@ -36,6 +36,46 @@ async function runSearch(
 	return data.results;
 }
 
+const normalizeTitle = (title: string) =>
+	title.toLowerCase().replace(/[^\p{L}\p{N}]/gu, "");
+
+function titlesOf(result: MultiSearchResult): string[] {
+	if (result.media_type === "movie") {
+		return [result.title, result.original_title];
+	}
+	if (result.media_type === "tv") return [result.name, result.original_name];
+	return [result.name];
+}
+
+// A trailing year can be part of the title ("Space: 1999" aired in 1975), so
+// also search the full text unfiltered. Exact title matches from that search
+// come first, then the year-filtered results.
+async function searchWithYear(
+	tmdb: TMDB,
+	parsed: ParsedSearchQuery,
+): Promise<MultiSearchResult[]> {
+	const fullText = `${parsed.query} ${parsed.year}`;
+	const [filtered, unfiltered] = await Promise.all([
+		runSearch(tmdb, parsed),
+		runSearch(tmdb, { query: fullText, type: parsed.type }),
+	]);
+
+	if (filtered.length === 0) return unfiltered;
+
+	const target = normalizeTitle(fullText);
+	const exactMatches = unfiltered.filter((result) =>
+		titlesOf(result).some((title) => title && normalizeTitle(title) === target),
+	);
+
+	const seen = new Set<string>();
+	return [...exactMatches, ...filtered].filter((result) => {
+		const key = `${result.media_type}-${result.id}`;
+		if (seen.has(key)) return false;
+		seen.add(key);
+		return true;
+	});
+}
+
 export const Route = createFileRoute("/api/search")({
 	server: {
 		handlers: {
@@ -50,16 +90,9 @@ export const Route = createFileRoute("/api/search")({
 				try {
 					const { getTMDB } = await import("~/utils/tmdb");
 					const tmdb = getTMDB();
-					let results = await runSearch(tmdb, parsed);
-
-					// The trailing number may be part of the title ("Space: 1999"),
-					// so search for it as text when the year filter finds nothing
-					if (results.length === 0 && parsed.year) {
-						results = await runSearch(tmdb, {
-							query: `${parsed.query} ${parsed.year}`,
-							type: parsed.type,
-						});
-					}
+					const results = parsed.year
+						? await searchWithYear(tmdb, parsed)
+						: await runSearch(tmdb, parsed);
 
 					const body: Search<MultiSearchResult> = {
 						page: 1,
