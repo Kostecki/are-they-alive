@@ -10,7 +10,8 @@
 		"preview": "vite preview",
 		"start": "node .output/server/index.mjs",
 		"generate:featured": "node scripts/generate-featured-candidates.mjs",
-		"cache:clear": "node scripts/clear-cache.mjs"
+		"cache:clear": "node scripts/clear-cache.mjs",
+		"lint": "biome check"
 	},
 	"dependencies": {
 		"@emotion/cache": "11.14.0",
@@ -32,6 +33,7 @@
 		"tmdb-ts": "2.3.0"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "2.6.6",
 		"@types/node": "26.6.6",
 		"@types/react": "19.3.0",
 		"@types/react-dom": "19.3.0",
