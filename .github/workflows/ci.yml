@@ -27,6 +27,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Lint and format
+        run: pnpm lint
+
       # Typechecks too (vite build && tsc --noEmit)
       - name: Build
         run: pnpm build

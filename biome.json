@@ -1,5 +1,5 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
 	"vcs": {
 		"enabled": false,
 		"clientKind": "git",
@@ -15,7 +15,8 @@
 			"!**/dist",
 			"!**/routeTree.gen.ts",
 			"!**/node_modules",
-			"!**/build"
+			"!**/build",
+			"!**/pnpm-lock.yaml"
 		]
 	},
 	"formatter": {
@@ -67,7 +68,7 @@
 			"!**/routeTree.gen.ts"
 		],
 		"rules": {
-			"recommended": true,
+			"preset": "recommended",
 			"correctness": {
 				"noUnusedVariables": "error",
 				"noUnusedImports": "error"
