@@ -1,7 +1,7 @@
 # Base for dev/build. Runs on the build machine's own platform even for
 # cross-platform builds: the output is plain JS (no native modules), so only
 # the runner stage needs the target platform, and the build skips QEMU.
-FROM --platform=$BUILDPLATFORM node:26.12.1-slim AS base
+FROM --platform=$BUILDPLATFORM node:26.13.0-slim AS base
 WORKDIR /are-they-alive
 
 # Install the pnpm version from package.json's packageManager field, kept current by Renovate
@@ -33,7 +33,7 @@ RUN pnpm run build
 
 # Just the Node binary, without debug symbols (~20MB). The official image's
 # npm, yarn and headers aren't needed at runtime.
-FROM node:26.12.1-alpine3.24 AS node
+FROM node:26.13.0-alpine3.24 AS node
 RUN apk add --no-cache binutils && strip /usr/local/bin/node
 
 # Final runtime image: Nitro's .output is self-contained, no node_modules needed.
